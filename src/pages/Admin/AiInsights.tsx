@@ -238,8 +238,17 @@ export default function AiInsights() {
 
       if (!error && data) {
         setApiKey(data.api_key_ia || "");
-        setPrompt(data.prompt_analise || `Atue como um Estrategista Sênior de Tráfego Pago e Especialista em Conversão, com ampla experiência em otimização de campanhas digitais e geração de leads. Vou te fornecer os dados de performance das campanhas de anúncios do meu cliente, cujo objetivo principal é a geração de Contatos/Cadastros (Leads) e Conversas no WhatsApp. 
-... (rest of the prompt)`);
+        setPrompt(data.prompt_analise || `Atue como um Estrategista Sênior de Tráfego Pago e Especialista em Conversão. Sua missão é traduzir dados técnicos complexos em uma análise de saúde empresarial e planos de ação claros.
+
+Vou te fornecer dados de performance (Meta Ads). Analise-os profundamente focando em:
+1. SAÚDE DA CONTA: Dê uma nota de 0 a 100 baseada no equilíbrio entre investimento e retorno (CPL).
+2. GARGALOS: Identifique onde o dinheiro está sendo "jogado fora" (ex: CTR alto mas sem conversão, ou CPM abusivo).
+3. CRIATIVOS: Analise quais tipos de mensagens estão funcionando e por que.
+4. PLANO DE MELHORIA: Liste ações imediatas (o que fazer amanhã) para baixar o custo por resultado.
+
+Sua resposta deve ser extremamente didática, como se estivesse explicando para um dono de empresa que não entende de tráfego, mas quer lucro.
+
+Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
       }
     };
     loadConfig();
@@ -707,11 +716,11 @@ export default function AiInsights() {
       {analysis && (
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
           {[
-            { id: 'kpis', label: 'KPIs', icon: Activity },
-            { id: 'graficos', label: 'Gráficos', icon: BarChart3 },
-            { id: 'tabelas', label: 'Tabelas', icon: ClipboardList },
-            { id: 'health', label: 'Health Score', icon: ShieldAlert },
-            { id: 'analise', label: 'Análise Estratégica', icon: Sparkles },
+            { id: 'analise', label: 'Estratégia & Ação', icon: Lightbulb },
+            { id: 'health', label: 'Saúde das Campanhas', icon: ShieldAlert },
+            { id: 'kpis', label: 'Métricas Reais', icon: Activity },
+            { id: 'graficos', label: 'Visualização', icon: BarChart3 },
+            { id: 'tabelas', label: 'Dados Brutos', icon: ClipboardList },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -719,7 +728,7 @@ export default function AiInsights() {
               className={cn(
                 "flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all whitespace-nowrap",
                 activeTab === tab.id 
-                  ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-sm" 
+                  ? "bg-white dark:bg-slate-900 text-indigo-600 shadow-md" 
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
@@ -983,95 +992,114 @@ export default function AiInsights() {
             </div>
           )}
 
-          {/* TAB: Análise Estratégica */}
-          {activeTab === 'analise' && (
-            <div className="space-y-8">
-              {/* 1. Resumo Executivo */}
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-                    <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">1. Resumo Executivo</h3>
+              {/* AI Logic Explanation (How it works) */}
+              <div className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 p-6 rounded-3xl flex flex-col md:flex-row items-center gap-6">
+                <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                  <Brain className="w-8 h-8 text-indigo-600 animate-pulse" />
                 </div>
-                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                  {analysis.resumo_executivo}
-                </p>
+                <div>
+                  <h4 className="font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-tight text-sm">Como a IA analisou seus dados?</h4>
+                  <p className="text-xs text-indigo-700/70 dark:text-indigo-300/60 font-medium leading-relaxed mt-1">
+                    Nossa IA cruzou métricas de <span className="text-indigo-900 dark:text-indigo-100 font-bold">Eficiência (CTR)</span>, <span className="text-indigo-900 dark:text-indigo-100 font-bold">Volume (Impressões)</span> e <span className="text-indigo-900 dark:text-indigo-100 font-bold">Custo Efetivo (CPL)</span> para identificar padrões de comportamento do seu público. Ela identificou não apenas o que aconteceu, mas <span className="italic">por que</span> aconteceu e como corrigir.
+                  </p>
+                </div>
               </div>
 
-              {/* 2. Saúde das Métricas */}
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
-                    <Activity className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              {/* 1. Resumo Executivo & Pontos Fortes */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+                      <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">1. Resumo Executivo</h3>
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">2. Saúde das Métricas</h3>
+                  <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    {analysis.resumo_executivo}
+                  </p>
                 </div>
-                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">
-                  {analysis.saude_metricas}
-                </p>
+
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
+                      <Award className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">2. Pontos Fortes</h3>
+                  </div>
+                  <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">
+                    {analysis.pontos_fortes}
+                  </p>
+                </div>
               </div>
 
-              {/* 3. Pontos Fortes */}
+              {/* 3. Diagnóstico e Problemas */}
               <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
-                    <Award className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">3. Pontos Fortes</h3>
-                </div>
-                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">
-                  {analysis.pontos_fortes}
-                </p>
-              </div>
-
-              {/* 4. Gargalos e Fugas de Verba */}
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-8">
                   <div className="p-2 bg-red-50 dark:bg-red-900/30 rounded-xl">
                     <ShieldAlert className="w-6 h-6 text-red-600 dark:text-red-400" />
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">4. Gargalos e Fugas de Verba</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">3. Gargalos e Problemas</h3>
                 </div>
-                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium whitespace-pre-wrap">
-                  {analysis.gargalos_fugas}
-                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-500 font-bold uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">O que está travando o resultado?</p>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
+                      {analysis.gargalos_fugas}
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    {analysis.principais_problemas.map((prob, i) => (
+                      <div key={i} className="flex gap-4 p-4 bg-red-50/50 dark:bg-red-900/5 rounded-2xl border border-red-100/50 dark:border-red-900/20">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                        <div>
+                          <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-tight mb-1">{prob.titulo}</h4>
+                          <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{prob.descricao}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* 5. Plano de Ação Prático */}
-              <div className="bg-indigo-600 p-8 rounded-3xl shadow-xl shadow-indigo-500/20">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-white/20 rounded-xl">
+              {/* 4. Plano de Ação Estratégico (O "Como Melhorar") */}
+              <div className="bg-slate-900 dark:bg-slate-950 p-8 lg:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                
+                <div className="flex items-center gap-4 mb-10 relative z-10">
+                  <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20">
                     <Zap className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase tracking-tight">5. Plano de Ação Prático</h3>
+                  <div>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">4. Plano de Melhoria Imediata</h3>
+                    <p className="text-slate-400 text-sm">Siga estes passos para otimizar o desempenho agora</p>
+                  </div>
                 </div>
-                <p className="text-lg text-white/90 leading-relaxed font-medium whitespace-pre-wrap mb-8">
-                  {analysis.plano_acao_gerencial}
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                   {analysis.plano_acao.map((plano, i) => (
-                    <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                      <div className="flex justify-between items-start mb-4">
-                        <h4 className="font-black text-white uppercase tracking-tight">{plano.titulo}</h4>
+                    <div key={i} className="bg-white/5 backdrop-blur-sm p-8 rounded-3xl border border-white/10 hover:border-indigo-500/30 transition-all group">
+                      <div className="flex justify-between items-start mb-6">
+                        <h4 className="font-black text-white text-lg uppercase tracking-tight group-hover:text-indigo-400 transition-colors">{plano.titulo}</h4>
                         <div className="flex gap-1">
                           {plano.tags.map((tag, j) => (
                             <span key={j} className={cn(
-                              "px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest",
-                              tag.type === 'danger' && "bg-red-500 text-white",
-                              tag.type === 'success' && "bg-emerald-500 text-white",
-                              tag.type === 'info' && "bg-blue-500 text-white"
+                              "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest",
+                              tag.type === 'danger' && "bg-red-500/20 text-red-400 border border-red-500/30",
+                              tag.type === 'success' && "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+                              tag.type === 'info' && "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                             )}>
                               {tag.label}
                             </span>
                           ))}
                         </div>
                       </div>
-                      <ul className="space-y-2">
+                      <ul className="space-y-4">
                         {plano.acoes.map((acao, j) => (
-                          <li key={j} className="flex items-center gap-2 text-xs text-indigo-100 font-medium">
-                            <ArrowRight className="w-3 h-3 text-indigo-300" />
+                          <li key={j} className="flex items-start gap-3 text-sm text-slate-300 font-medium group/item">
+                            <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-indigo-500 transition-colors">
+                              <CheckCircle2 className="w-3 h-3 text-indigo-400 group-hover/item:text-white" />
+                            </div>
                             {acao}
                           </li>
                         ))}

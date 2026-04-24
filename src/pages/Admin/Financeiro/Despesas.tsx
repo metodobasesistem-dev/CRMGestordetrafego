@@ -136,18 +136,18 @@ export default function Despesas() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Despesas</h1>
           <p className="text-slate-500 dark:text-slate-400">Custos e gastos operacionais</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowFilters(!showFilters)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all", showFilters ? "bg-rose-600 text-white border-rose-600" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400")}>
-            <Filter className="w-4 h-4"/> Filtros
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <button onClick={() => setShowFilters(!showFilters)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all shrink-0", showFilters ? "bg-rose-600 text-white border-rose-600" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400")}>
+            <Filter className="w-4 h-4"/> <span className="hidden sm:inline">Filtros</span>
           </button>
-          <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-emerald-500 hover:text-emerald-600 transition-all">
-            <Download className="w-4 h-4"/> CSV
+          <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0">
+            <Download className="w-4 h-4"/> <span className="hidden sm:inline">CSV</span>
           </button>
-          <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-rose-500 hover:text-rose-600 transition-all">
-            <FileText className="w-4 h-4"/> PDF
+          <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-rose-500 hover:text-rose-600 transition-all shrink-0">
+            <FileText className="w-4 h-4"/> <span className="hidden sm:inline">PDF</span>
           </button>
-          <button onClick={() => { setForm(emptyForm); setEditingId(null); setIsModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-rose-200 dark:shadow-none">
-            <Plus className="w-4 h-4"/> Nova Despesa
+          <button onClick={() => { setForm(emptyForm); setEditingId(null); setIsModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-rose-200 dark:shadow-none shrink-0">
+            <Plus className="w-4 h-4"/> <span>Nova Despesa</span>
           </button>
         </div>
       </div>
@@ -186,7 +186,8 @@ export default function Despesas() {
       )}
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View (Table) */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
@@ -229,10 +230,61 @@ export default function Despesas() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile View (Cards) */}
+        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {loading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="p-4 space-y-3">
+                <div className="flex justify-between"><Skeleton className="h-4 w-32"/><Skeleton className="h-4 w-20"/></div>
+                <Skeleton className="h-3 w-full"/>
+              </div>
+            ))
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 text-sm">Nenhuma despesa encontrada.</div>
+          ) : (
+            filtered.map(d => {
+              const cat = getCatConfig(d.categoria);
+              const dt = d.data_despesa ? parseISO(d.data_despesa) : null;
+              return (
+                <div key={d.id} className="p-4 flex flex-col gap-3 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 dark:text-white leading-tight truncate">{d.descricao}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className={cn("px-2 py-0.5 rounded-lg text-[10px] font-bold", cat.color)}>{cat.label}</span>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">{dt && isValid(dt) ? format(dt, "dd/MM/yyyy") : "—"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="font-black text-rose-600 dark:text-rose-400">{formatCurrency(Number(d.valor))}</p>
+                      {d.recorrente && <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-tighter">Recorrente</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                    <button onClick={() => handleEdit(d)} className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl flex items-center gap-2 text-xs font-bold">
+                      <Edit2 className="w-3.5 h-3.5"/> Editar
+                    </button>
+                    <button onClick={() => handleDelete(d.id)} className="p-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-xl flex items-center gap-2 text-xs font-bold">
+                      <Trash2 className="w-3.5 h-3.5"/> Excluir
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <p className="text-xs text-slate-400">{filtered.length} registros</p>
-            <p className="text-sm font-bold text-rose-600 dark:text-rose-400">Total: {formatCurrency(totalMes)}</p>
+          <div className="px-5 py-4 bg-rose-50/30 dark:bg-rose-900/10 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">{filtered.length} Despesas</p>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Total do Período</span>
+                <p className="text-xl font-black text-rose-600 dark:text-rose-400">{formatCurrency(totalMes)}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

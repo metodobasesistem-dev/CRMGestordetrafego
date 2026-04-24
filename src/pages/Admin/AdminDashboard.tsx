@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { Cliente, DadosCampanha } from "../../types";
-import { TrendingUp, Target, DollarSign, MousePointer2, BarChart3, Filter, ChevronDown, X } from "lucide-react";
+import { TrendingUp, Target, DollarSign, MousePointer2, BarChart3, Filter, ChevronDown, X, Wallet, Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { 
   AreaChart, 
   Area, 
@@ -34,6 +34,8 @@ export default function AdminDashboard() {
   const isMobile = useIsMobile();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [dados, setDados] = useState<DadosCampanha[]>([]);
+  const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const [despesas, setDespesas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,20 +50,26 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [clientesRes, dadosRes] = await Promise.all([
+        const [clientesRes, dadosRes, pagamentosRes, despesasRes] = await Promise.all([
           supabase.from('clientes').select('*'),
-          supabase.from('dados_campanhas').select('*')
+          supabase.from('dados_campanhas').select('*'),
+          supabase.from('pagamentos').select('*'),
+          supabase.from('despesas').select('*')
         ]);
 
         if (clientesRes.error) throw clientesRes.error;
         if (dadosRes.error) throw dadosRes.error;
+        if (pagamentosRes.error) throw pagamentosRes.error;
+        if (despesasRes.error) throw despesasRes.error;
 
         setClientes(clientesRes.data || []);
         setDados(dadosRes.data || []);
+        setPagamentos(pagamentosRes.data || []);
+        setDespesas(despesasRes.data || []);
         setError(null);
       } catch (error) {
         console.error("Erro ao carregar dados do dashboard:", error);
-        setError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
+        setError("Não foi possível carregar os dados do dashboard.");
       } finally {
         setLoading(false);
       }
@@ -73,6 +81,8 @@ export default function AdminDashboard() {
     const channel = supabase
       .channel('dashboard_updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'dados_campanhas' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pagamentos' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'despesas' }, fetchData)
       .subscribe();
 
     return () => {
@@ -113,44 +123,58 @@ export default function AdminDashboard() {
     });
   }, [dados, realClientIds, selectedClienteId, periodo, dataInicio, dataFim]);
   
+  const totalClientesAtivos = realClientes.length;
+  
+  // Business Finance Metrics
+  const faturamentoPeriodo = pagamentos
+    .filter(p => p.status === "pago")
+    .reduce((acc, curr) => acc + curr.valor, 0);
+    
+  const despesasPeriodo = despesas
+    .reduce((acc, curr) => acc + curr.valor, 0);
+    
+  const lucroLiquido = faturamentoPeriodo - despesasPeriodo;
+  const ticketMedio = totalClientesAtivos > 0 ? faturamentoPeriodo / totalClientesAtivos : 0;
+
+  // Ads Metrics (for reference)
   const totalInvestido = filteredDados.reduce((acc, curr) => acc + curr.investimento, 0);
   const totalCliques = filteredDados.reduce((acc, curr) => acc + curr.cliques, 0);
   const totalImpressoes = filteredDados.reduce((acc, curr) => acc + curr.impressoes, 0);
-  const totalConversoes = filteredDados.reduce((acc, curr) => acc + curr.conversoes, 0);
   const avgCTR = totalImpressoes > 0 ? (totalCliques / totalImpressoes) * 100 : 0;
 
-  // Chart Data: Daily Spend
-  const dailyData = filteredDados.reduce((acc: any[], curr) => {
-    const date = curr.data;
-    const existing = acc.find(item => item.date === date);
-    if (existing) {
-      existing.investimento += curr.investimento;
-      existing.cliques += curr.cliques;
-    } else {
-      acc.push({ date, investimento: curr.investimento, cliques: curr.cliques });
-    }
-    return acc;
-  }, []).sort((a, b) => a.date.localeCompare(b.date));
-
-  // Client Performance Data
-  const clientPerformance = realClientes
-    .map(cliente => {
-      const clientData = filteredDados.filter(d => d.cliente_id === cliente.id);
-      const investido = clientData.reduce((acc, curr) => acc + curr.investimento, 0);
-      return {
-        name: cliente.nome_cliente,
-        investido
-      };
-    })
-    .filter(c => c.investido > 0 || selectedClienteId === "todos")
-    .sort((a, b) => b.investido - a.investido);
-
+  // Business Stats (KPIs Principais)
   const stats = [
-    { name: "Investimento Total", value: formatCurrency(totalInvestido), icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { name: "Cliques Totais", value: totalCliques.toLocaleString("pt-BR"), icon: MousePointer2, color: "text-blue-600", bg: "bg-blue-50" },
-    { name: "CTR Médio", value: `${avgCTR.toFixed(2)}%`, icon: Target, color: "text-amber-600", bg: "bg-amber-50" },
+    { name: "Faturamento Total", value: formatCurrency(faturamentoPeriodo), icon: Wallet, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { name: "Clientes Ativos", value: totalClientesAtivos.toString(), icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { name: "Ticket Médio", value: formatCurrency(ticketMedio), icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { name: "Lucro Líquido", value: formatCurrency(lucroLiquido), icon: DollarSign, color: lucroLiquido >= 0 ? "text-emerald-600" : "text-rose-600", bg: lucroLiquido >= 0 ? "bg-emerald-50" : "bg-rose-50" },
   ];
 
+  // Chart Data: Fluxo de Caixa Diário (Últimos 30 dias)
+  const dailyFinanceData = useMemo(() => {
+    const last30Days = Array.from({ length: 30 }).map((_, i) => {
+      const d = subDays(new Date(), 29 - i);
+      return format(d, "yyyy-MM-dd");
+    });
+
+    return last30Days.map(date => {
+      const rec = pagamentos
+        .filter(p => p.status === "pago" && p.data_pagamento === date)
+        .reduce((s, p) => s + p.valor, 0);
+      const desp = despesas
+        .filter(d => d.data_despesa === date)
+        .reduce((s, d) => s + d.valor, 0);
+      return { date, faturamento: rec, despesas: desp };
+    });
+  }, [pagamentos, despesas]);
+
+  // Client List by Revenue
+  const clientRevenue = realClientes.map(c => {
+    const total = pagamentos
+      .filter(p => p.cliente_id === c.id && p.status === "pago")
+      .reduce((s, p) => s + p.valor, 0);
+    return { name: c.nome_cliente, total };
+  }).sort((a, b) => b.total - a.total);
   if (error) return (
     <div className="flex flex-col items-center justify-center p-20 text-center space-y-4">
       <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
@@ -304,21 +328,28 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Main Chart */}
+            {/* Business Cash Flow Chart */}
             <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
               <div className="flex items-center justify-between mb-6 lg:mb-8">
-                <h3 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5 text-indigo-500 dark:text-indigo-400" />
-                  Investimento Diário {selectedClienteId !== "todos" ? ` - ${realClientes.find(c => c.id === selectedClienteId)?.nome_cliente}` : "Consolidado"}
-                </h3>
+                <div>
+                  <h3 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-500" />
+                    Saúde do Negócio: Faturamento vs Despesas
+                  </h3>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">Últimos 30 dias</p>
+                </div>
               </div>
               <div className="h-[250px] lg:h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={dailyData}>
+                  <AreaChart data={dailyFinanceData}>
                     <defs>
-                      <linearGradient id="colorInvest" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      <linearGradient id="colorFat" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorDesp" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
@@ -327,53 +358,40 @@ export default function AdminDashboard() {
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: '#94a3b8', fontSize: 10 }}
-                      tickFormatter={(val) => {
-                        const date = new Date(val);
-                        return window.innerWidth < 768 
-                          ? date.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' })
-                          : date.toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' });
-                      }}
-                      minTickGap={20}
+                      tickFormatter={(val) => format(parseISO(val), "dd/MM")}
                     />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fill: '#94a3b8', fontSize: 10 }} 
-                      tickFormatter={(val) => {
-                        if (val >= 1000) return `R$ ${(val/1000).toFixed(1)}k`;
-                        return `R$ ${val}`;
-                      }}
-                      width={45}
+                      tickFormatter={(val) => `R$${val}`}
                     />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff', 
                         borderColor: theme === 'dark' ? '#1e293b' : '#e2e8f0',
                         borderRadius: '12px', 
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                        fontSize: '12px'
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                       }}
-                      itemStyle={{ color: theme === 'dark' ? '#f1f5f9' : '#0f172a' }}
-                      labelStyle={{ color: theme === 'dark' ? '#94a3b8' : '#64748b', fontWeight: 'bold' }}
-                      labelFormatter={(val) => new Date(val).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long' })}
-                      formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value), "Investimento"]}
+                      formatter={(value: any) => formatCurrency(value)}
                     />
-                    <Area type="monotone" dataKey="investimento" name="Investimento (R$)" stroke="#6366f1" strokeWidth={isMobile ? 2 : 3} fillOpacity={1} fill="url(#colorInvest)" />
+                    <Area type="monotone" dataKey="faturamento" name="Faturamento" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorFat)" />
+                    <Area type="monotone" dataKey="despesas" name="Despesas" stroke="#f43f5e" strokeWidth={3} fillOpacity={1} fill="url(#colorDesp)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Client Performance List */}
+            {/* Top Clients by Revenue */}
             <div className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
               <h3 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-6">
-                {selectedClienteId === "todos" ? "Top Clientes por Investimento" : "Performance do Cliente"}
+                Ranking de Faturamento (R$)
               </h3>
               <div className="space-y-4 lg:space-y-6">
-                {clientPerformance.slice(0, 8).map((client, idx) => (
+                {clientRevenue.slice(0, 8).map((client, idx) => (
                   <div key={client.name} className="flex items-center justify-between p-2 lg:p-0 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] lg:text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-[10px] lg:text-xs font-bold text-emerald-600">
                         {idx + 1}
                       </div>
                       <div>
@@ -381,16 +399,62 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs lg:text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(client.investido)}</p>
-                      <div className="w-16 lg:w-24 h-1 bg-slate-100 dark:bg-slate-800 rounded-full mt-1 overflow-hidden">
+                      <p className="text-xs lg:text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(client.total)}</p>
+                      <div className="w-16 lg:w-24 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-1 overflow-hidden">
                         <div 
-                          className="h-full bg-indigo-500 rounded-full" 
-                          style={{ width: `${clientPerformance[0].investido > 0 ? (client.investido / clientPerformance[0].investido) * 100 : 0}%` }}
+                          className="h-full bg-emerald-500 rounded-full" 
+                          style={{ width: `${clientRevenue[0].total > 0 ? (client.total / clientRevenue[0].total) * 100 : 0}%` }}
                         />
                       </div>
                     </div>
                   </div>
                 ))}
+                {clientRevenue.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-10 italic">Nenhum faturamento registrado ainda.</p>
+                )}
+              </div>
+            </div>
+          {/* Ads Performance Summary (O Trabalho do Gestor) */}
+          <div className="bg-slate-50 dark:bg-slate-800/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Target className="w-5 h-5 text-indigo-500" />
+                  Performance das Campanhas
+                </h3>
+                <p className="text-xs text-slate-500">Dados consolidados do Meta Ads dos seus clientes</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                  <DollarSign className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Investido (Clientes)</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(totalInvestido)}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                  <MousePointer2 className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cliques Gerados</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">{totalCliques.toLocaleString("pt-BR")}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+                  <BarChart3 className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CTR Médio</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">{avgCTR.toFixed(2)}%</p>
+                </div>
               </div>
             </div>
           </div>

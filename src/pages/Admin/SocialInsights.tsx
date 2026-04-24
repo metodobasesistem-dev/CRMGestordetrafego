@@ -191,6 +191,10 @@ export default function SocialInsights() {
             Redes Sociais
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Insights orgânicos — Facebook Pages e Instagram</p>
+          <div className="inline-flex items-center gap-2 px-3 py-1 mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Módulo em Desenvolvimento</span>
+          </div>
         </div>
         <button onClick={handleRefresh} disabled={refreshing || loading}
           className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:border-indigo-500 hover:text-indigo-600 transition-all">

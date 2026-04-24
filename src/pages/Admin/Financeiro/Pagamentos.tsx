@@ -159,18 +159,18 @@ export default function Pagamentos() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Pagamentos</h1>
           <p className="text-slate-500 dark:text-slate-400">Receitas dos clientes</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowFilters(!showFilters)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all", showFilters ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400")}>
-            <Filter className="w-4 h-4"/> Filtros
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <button onClick={() => setShowFilters(!showFilters)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all shrink-0", showFilters ? "bg-indigo-600 text-white border-indigo-600" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400")}>
+            <Filter className="w-4 h-4"/> <span className="hidden sm:inline">Filtros</span>
           </button>
-          <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-emerald-500 hover:text-emerald-600 transition-all">
-            <Download className="w-4 h-4"/> CSV
+          <button onClick={exportCSV} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-emerald-500 hover:text-emerald-600 transition-all shrink-0">
+            <Download className="w-4 h-4"/> <span className="hidden sm:inline">CSV</span>
           </button>
-          <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-indigo-500 hover:text-indigo-600 transition-all">
-            <FileText className="w-4 h-4"/> PDF
+          <button onClick={exportPDF} className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 text-sm font-bold hover:border-indigo-500 hover:text-indigo-600 transition-all shrink-0">
+            <FileText className="w-4 h-4"/> <span className="hidden sm:inline">PDF</span>
           </button>
-          <button onClick={() => { setForm(emptyForm); setEditingId(null); setIsModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-200 dark:shadow-none">
-            <Plus className="w-4 h-4"/> Novo
+          <button onClick={() => { setForm(emptyForm); setEditingId(null); setIsModalOpen(true); }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
+            <Plus className="w-4 h-4"/> <span>Novo</span>
           </button>
         </div>
       </div>
@@ -208,7 +208,8 @@ export default function Pagamentos() {
       </AnimatePresence>
 
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View (Table) */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
@@ -262,15 +263,77 @@ export default function Pagamentos() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile View (Cards) */}
+        <div className="lg:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {loading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="p-4 space-y-3">
+                <div className="flex justify-between"><Skeleton className="h-4 w-32"/><Skeleton className="h-4 w-20"/></div>
+                <Skeleton className="h-3 w-full"/>
+              </div>
+            ))
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 text-sm">Nenhum registro encontrado.</div>
+          ) : (
+            filtered.map(p => {
+              const sc = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pendente;
+              const StatusIcon = sc.icon;
+              const venc = p.data_vencimento ? parseISO(p.data_vencimento) : null;
+              return (
+                <div key={p.id} className="p-4 flex flex-col gap-3 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">
+                        {nomeCliente(p.cliente_id).charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 dark:text-white leading-tight">{nomeCliente(p.cliente_id)}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Venc. {venc && isValid(venc) ? format(venc, "dd/MM/yyyy") : "—"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-slate-900 dark:text-white">{formatCurrency(Number(p.valor))}</p>
+                      <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold mt-1", sc.color)}>
+                        <StatusIcon className="w-2.5 h-2.5"/>{sc.label}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(p)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg"><Edit2 className="w-4 h-4"/></button>
+                      <button onClick={() => handleDelete(p.id)} className="p-2 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                    </div>
+                    {p.status !== "pago" && (
+                      <button 
+                        onClick={() => handleMarcarPago(p)} 
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-200 dark:shadow-none"
+                      >
+                        ✓ MARCAR PAGO
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <p className="text-xs text-slate-400">{filtered.length} registros</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">
-              Total: {formatCurrency(filtered.reduce((s, p) => s + Number(p.valor), 0))}
-              <span className="ml-3 text-emerald-600 dark:text-emerald-400">
-                Recebido: {formatCurrency(filtered.filter(p => p.status === "pago").reduce((s, p) => s + Number(p.valor), 0))}
-              </span>
-            </p>
+          <div className="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <p className="text-xs text-slate-400">{filtered.length} lançamentos</p>
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total do Período</span>
+                <p className="text-base font-black text-slate-900 dark:text-white">
+                  {formatCurrency(filtered.reduce((s, p) => s + Number(p.valor), 0))}
+                </p>
+                <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                  Recebido: {formatCurrency(filtered.filter(p => p.status === "pago").reduce((s, p) => s + Number(p.valor), 0))}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

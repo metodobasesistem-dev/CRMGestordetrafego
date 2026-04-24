@@ -104,15 +104,17 @@ export default function FinanceiroDashboard() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 sm:h-28 rounded-2xl" />)}
+        </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {kpis.map(({ label, value, icon: Icon, c }) => (
-            <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-start gap-4">
+            <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center sm:items-start gap-4">
               <div className={cn("p-2.5 rounded-xl shrink-0", cls[c])}><Icon className="w-5 h-5" /></div>
               <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-                <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5 truncate">{value}</p>
+                <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
+                <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 truncate">{value}</p>
               </div>
             </div>
           ))}
