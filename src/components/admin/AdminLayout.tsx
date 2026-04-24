@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
 import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -38,20 +38,10 @@ export default function AdminLayout() {
         return;
       }
 
-      // Strict filtering for real clients (migrated logic)
-      const fakeNames = [
-        "exemplo", "teste", "mock", "fake", "ficticia", "fictícia", 
-        "silva advogados", "clínica sorriso", "techworld", "imobiliária horizonte",
-        "cliente 1", "cliente 2", "cliente 3", "cliente 4", "cliente 5",
-        "empresa a", "empresa b", "empresa c", "dashboard exemplo",
-        "demo", "amostra", "modelo", "padrão", "padrao"
-      ];
-      
+      // Usa utilitário centralizado (elimina código duplicado)
       const realClients = (data || []).filter(c => {
         if (!c.nome_cliente || c.nome_cliente.trim() === "") return false;
-        const nameLower = c.nome_cliente.toLowerCase();
-        const isGeneric = /^(cliente|empresa|teste|exemplo)\s*\d*$/i.test(nameLower);
-        return !isGeneric && !fakeNames.some(fake => nameLower.includes(fake));
+        return !isFakeClient(c.nome_cliente);
       });
       
       setClientes(realClients);

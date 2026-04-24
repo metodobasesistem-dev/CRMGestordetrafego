@@ -1,10 +1,12 @@
 export interface User {
   uid: string;
+  id?: string; // Alias para uid, usado em alguns contextos
   email: string;
   role: 'admin' | 'client';
   allowedClients?: string[]; // Array of client IDs
   name?: string;
-  created_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Cliente {

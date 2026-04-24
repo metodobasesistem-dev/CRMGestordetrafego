@@ -11,7 +11,7 @@ import {
   Tooltip, 
   ResponsiveContainer
 } from "recharts";
-import { cn } from "../../lib/utils";
+import { cn, isFakeClient, formatCurrency } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { format, subDays, isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [dados, setDados] = useState<DadosCampanha[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filters
   const [selectedClienteId, setSelectedClienteId] = useState<string>("todos");
@@ -57,8 +58,10 @@ export default function AdminDashboard() {
 
         setClientes(clientesRes.data || []);
         setDados(dadosRes.data || []);
+        setError(null);
       } catch (error) {
         console.error("Erro ao carregar dados do dashboard:", error);
+        setError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
       } finally {
         setLoading(false);
       }
@@ -77,24 +80,9 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Aggregated Metrics
-  const fakeNames = [
-    "exemplo", "teste", "mock", "fake", "ficticia", "fictícia", 
-    "silva advogados", "clínica sorriso", "techworld", "imobiliária horizonte",
-    "cliente 1", "cliente 2", "cliente 3", "cliente 4", "cliente 5",
-    "empresa a", "empresa b", "empresa c", "dashboard exemplo",
-    "demo", "amostra", "modelo", "padrão", "padrao"
-  ];
-  
-  const isFake = (name: string) => {
-    if (!name || name.trim() === "") return true;
-    const nameLower = name.toLowerCase();
-    const isGeneric = /^(cliente|empresa|teste|exemplo)\s*\d*$/i.test(nameLower);
-    return isGeneric || fakeNames.some(fake => nameLower.includes(fake));
-  };
-
+  // Usa utilitário centralizado (elimina código duplicado)
   const realClientes = useMemo(() => 
-    clientes.filter(c => c.meta_ads_conectado && !isFake(c.nome_cliente)),
+    clientes.filter(c => c.meta_ads_conectado && !isFakeClient(c.nome_cliente)),
   [clientes]);
 
   const realClientIds = useMemo(() => realClientes.map(c => c.id), [realClientes]);
@@ -158,10 +146,26 @@ export default function AdminDashboard() {
     .sort((a, b) => b.investido - a.investido);
 
   const stats = [
-    { name: "Investimento Total", value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalInvestido), icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { name: "Investimento Total", value: formatCurrency(totalInvestido), icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
     { name: "Cliques Totais", value: totalCliques.toLocaleString("pt-BR"), icon: MousePointer2, color: "text-blue-600", bg: "bg-blue-50" },
     { name: "CTR Médio", value: `${avgCTR.toFixed(2)}%`, icon: Target, color: "text-amber-600", bg: "bg-amber-50" },
   ];
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center p-20 text-center space-y-4">
+      <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
+        <BarChart3 className="w-10 h-10 text-red-400" />
+      </div>
+      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Erro ao carregar o Dashboard</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">{error}</p>
+      <button 
+        onClick={() => { setError(null); setLoading(true); }}
+        className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  );
 
   if (loading) return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -377,7 +381,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs lg:text-sm font-bold text-slate-900 dark:text-white">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(client.investido)}</p>
+                      <p className="text-xs lg:text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(client.investido)}</p>
                       <div className="w-16 lg:w-24 h-1 bg-slate-100 dark:bg-slate-800 rounded-full mt-1 overflow-hidden">
                         <div 
                           className="h-full bg-indigo-500 rounded-full" 
