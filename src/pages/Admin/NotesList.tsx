@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { Note, Cliente } from "../../types";
-import { Plus, Trash2, Calendar as CalendarIcon, User, MessageSquare, Search, StickyNote, X } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, User, Search, StickyNote, X, Edit2, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,37 +11,17 @@ export default function NotesList() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [loading, setLoading] = useState(false);
   
-  const [newNote, setNewNote] = useState({
+  const [noteForm, setNoteForm] = useState({
     title: "",
     content: "",
     date: format(new Date(), "yyyy-MM-dd"),
-    cliente_id: "" // Empty string will represent "None" in the UI
+    cliente_id: ""
   });
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .order('date', { ascending: false });
-      
-      if (!error && data) {
-        setNotes(data as Note[]);
-      }
-    };
-
-    const fetchClientes = async () => {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('nome_cliente', { ascending: true });
-      
-      if (!error && data) {
-        setClientes(data as Cliente[]);
-      }
-    };
-
     fetchNotes();
     fetchClientes();
 
@@ -53,44 +33,93 @@ export default function NotesList() {
       })
       .subscribe();
 
-    const clientesSubscription = supabase
-      .channel('clientes-changes')
-      .on('postgres_changes', { event: '*', table: 'clientes' }, () => {
-        fetchClientes();
-      })
-      .subscribe();
-
     return () => {
       notesSubscription.unsubscribe();
-      clientesSubscription.unsubscribe();
     };
   }, []);
 
-  const handleAddNote = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newNote.title || !newNote.content || !newNote.date) return;
+  const fetchNotes = async () => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('date', { ascending: false });
+    
+    if (!error && data) {
+      setNotes(data as Note[]);
+    }
+  };
 
-    try {
-      const { error } = await supabase
-        .from('notes')
-        .insert([{
-          ...newNote,
-          cliente_id: newNote.cliente_id === "" ? null : newNote.cliente_id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]);
+  const fetchClientes = async () => {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .order('nome_cliente', { ascending: true });
+    
+    if (!error && data) {
+      setClientes(data as Cliente[]);
+    }
+  };
 
-      if (error) throw error;
-
-      setIsModalOpen(false);
-      setNewNote({
+  const handleOpenModal = (note: Note | null = null) => {
+    if (note) {
+      setEditingNote(note);
+      setNoteForm({
+        title: note.title,
+        content: note.content,
+        date: note.date,
+        cliente_id: note.cliente_id || ""
+      });
+    } else {
+      setEditingNote(null);
+      setNoteForm({
         title: "",
         content: "",
         date: format(new Date(), "yyyy-MM-dd"),
         cliente_id: ""
       });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteForm.title || !noteForm.content || !noteForm.date) return;
+
+    setLoading(true);
+    try {
+      const dataToSave = {
+        title: noteForm.title,
+        content: noteForm.content,
+        date: noteForm.date,
+        cliente_id: noteForm.cliente_id === "" ? null : noteForm.cliente_id,
+        updated_at: new Date().toISOString()
+      };
+
+      if (editingNote) {
+        const { error } = await supabase
+          .from('notes')
+          .update(dataToSave)
+          .eq('id', editingNote.id);
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('notes')
+          .insert([{
+            ...dataToSave,
+            created_at: new Date().toISOString()
+          }]);
+        
+        if (error) throw error;
+      }
+
+      setIsModalOpen(false);
+      fetchNotes();
     } catch (error) {
-      console.error("Erro ao adicionar anotação:", error);
+      console.error("Erro ao salvar anotação:", error);
+      alert("Erro ao salvar anotação. Verifique se todas as colunas existem no banco.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,14 +132,15 @@ export default function NotesList() {
         .eq('id', id);
       
       if (error) throw error;
+      fetchNotes();
     } catch (error) {
       console.error("Erro ao excluir anotação:", error);
     }
   };
 
   const filteredNotes = notes.filter(note => {
-    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         note.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = note.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         note.content?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -127,7 +157,7 @@ export default function NotesList() {
           <p className="text-slate-500 dark:text-slate-400">Registre observações e notas importantes</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => handleOpenModal()}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-lg shadow-indigo-200 dark:shadow-none"
         >
           <Plus className="w-5 h-5" />
@@ -165,12 +195,20 @@ export default function NotesList() {
                 <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">
                   {note.title}
                 </h3>
-                <button
-                  onClick={() => deleteNote(note.id)}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => handleOpenModal(note)}
+                    className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => deleteNote(note.id)}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 whitespace-pre-wrap line-clamp-6">
@@ -198,21 +236,23 @@ export default function NotesList() {
         )}
       </div>
 
-      {/* Modal Nova Anotação */}
+      {/* Modal Nova/Editar Anotação */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Nova Anotação</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {editingNote ? 'Editar Anotação' : 'Nova Anotação'}
+              </h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><X className="w-6 h-6" /></button>
             </div>
             
-            <form onSubmit={handleAddNote} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Cliente</label>
                 <select
-                  value={newNote.cliente_id}
-                  onChange={(e) => setNewNote({ ...newNote, cliente_id: e.target.value })}
+                  value={noteForm.cliente_id}
+                  onChange={(e) => setNoteForm({ ...noteForm, cliente_id: e.target.value })}
                   className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
                 >
                   <option value="">Nenhum cliente (Geral)</option>
@@ -228,8 +268,8 @@ export default function NotesList() {
                   type="text"
                   required
                   placeholder="Ex: Feedback da campanha, Ideia de criativo..."
-                  value={newNote.title}
-                  onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
+                  value={noteForm.title}
+                  onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
                   className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
                 />
               </div>
@@ -239,8 +279,8 @@ export default function NotesList() {
                 <input
                   type="date"
                   required
-                  value={newNote.date}
-                  onChange={(e) => setNewNote({ ...newNote, date: e.target.value })}
+                  value={noteForm.date}
+                  onChange={(e) => setNoteForm({ ...noteForm, date: e.target.value })}
                   className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
                 />
               </div>
@@ -251,8 +291,8 @@ export default function NotesList() {
                   required
                   placeholder="Escreva aqui suas observações..."
                   rows={6}
-                  value={newNote.content}
-                  onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
+                  value={noteForm.content}
+                  onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
                   className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white resize-none"
                 />
               </div>
@@ -267,9 +307,10 @@ export default function NotesList() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
                 >
-                  Salvar Anotação
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingNote ? 'Salvar Alterações' : 'Salvar Anotação')}
                 </button>
               </div>
             </form>
