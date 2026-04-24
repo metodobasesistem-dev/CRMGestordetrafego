@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { Plus, Edit2, Search, CheckCircle2, XCircle, BarChart3, AlertCircle, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit2, Search, CheckCircle2, XCircle, BarChart3, AlertCircle, Trash2, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
 import { Skeleton, SkeletonCard } from "../../components/ui/Skeleton";
+import { formatDistanceToNow, parseISO, isValid } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export default function ClientList() {
   const { user } = useAuth();
@@ -15,18 +17,34 @@ export default function ClientList() {
   const [clientToDelete, setClientToDelete] = useState<Cliente | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Mapa de cliente_id -> data da última sincronização com Meta Ads
+  const [lastSyncMap, setLastSyncMap] = useState<Record<string, string>>({});
 
   const fetchClientes = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error: fetchError } = await supabase
-        .from('clientes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Busca clientes e última data de sync do Meta Ads em paralelo
+      const [clientesRes, syncRes] = await Promise.all([
+        supabase.from('clientes').select('*').order('created_at', { ascending: false }),
+        supabase
+          .from('dados_campanhas')
+          .select('cliente_id, created_at')
+          .eq('plataforma', 'meta_ads')
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (fetchError) throw fetchError;
-      setClientes(data || []);
+      if (clientesRes.error) throw clientesRes.error;
+      setClientes(clientesRes.data || []);
+
+      // Monta mapa com a data mais recente por cliente (primeiro = mais recente)
+      const syncMap: Record<string, string> = {};
+      for (const row of syncRes.data || []) {
+        if (!syncMap[row.cliente_id]) {
+          syncMap[row.cliente_id] = row.created_at;
+        }
+      }
+      setLastSyncMap(syncMap);
     } catch (err: any) {
       console.error("Error fetching clients:", err);
       setError("Erro ao carregar clientes.");
@@ -192,10 +210,10 @@ export default function ClientList() {
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col justify-center">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Sincronização</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Última Sync Meta</span>
                     <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 mt-0.5">
-                      {cliente.ultima_sincronizacao
-                        ? new Date(cliente.ultima_sincronizacao).toLocaleDateString("pt-BR")
+                      {lastSyncMap[cliente.id]
+                        ? (() => { try { const d = parseISO(lastSyncMap[cliente.id]); return isValid(d) ? formatDistanceToNow(d, { addSuffix: true, locale: ptBR }) : '—'; } catch { return '—'; } })()
                         : "Nunca"}
                     </p>
                   </div>
@@ -304,11 +322,29 @@ export default function ClientList() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {cliente.ultima_sincronizacao
-                          ? new Date(cliente.ultima_sincronizacao).toLocaleString("pt-BR")
-                          : "Nunca"}
-                      </p>
+                      {(() => {
+                        const syncDate = lastSyncMap[cliente.id];
+                        if (!syncDate) return (
+                          <div>
+                            <p className="text-sm font-medium text-slate-400 dark:text-slate-500">Nunca</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-wide">Sem dados Meta Ads</p>
+                          </div>
+                        );
+                        try {
+                          const d = parseISO(syncDate);
+                          if (!isValid(d)) return <p className="text-sm text-slate-400">—</p>;
+                          return (
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                {formatDistanceToNow(d, { addSuffix: true, locale: ptBR })}
+                              </p>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                {d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          );
+                        } catch { return <p className="text-sm text-slate-400">—</p>; }
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
