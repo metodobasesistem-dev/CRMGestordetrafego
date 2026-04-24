@@ -36,7 +36,7 @@ export default function CalendarView() {
       if (!error && data) {
         setTasks(data as Task[]);
         if (selectedDate) {
-          const dayTasks = (data as Task[]).filter(t => isSameDay(parseISO(t.date), selectedDate));
+          const dayTasks = (data as Task[]).filter(t => t.date && isSameDay(parseISO(t.date), selectedDate));
           setSelectedDayTasks(dayTasks);
         }
       }
@@ -91,7 +91,7 @@ export default function CalendarView() {
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const getDayTasks = (day: Date) => {
-    return tasks.filter(task => isSameDay(parseISO(task.date), day));
+    return tasks.filter(task => task.date && isSameDay(parseISO(task.date), day));
   };
 
   const getClienteName = (id: string) => {

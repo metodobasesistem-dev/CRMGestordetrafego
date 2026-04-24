@@ -66,22 +66,10 @@ export default function ClientList() {
     }
   };
 
-  const fakeNames = ["exemplo", "teste", "mock", "fake", "ficticia", "fictícia", "silva advogados", "clínica sorriso", "techworld", "imobiliária horizonte"];
-  const isFake = (name: string) => {
-    if (!name || name.trim() === "") return true;
-    return fakeNames.some(fake => name.toLowerCase().includes(fake));
-  };
-
   const filteredClientes = clientes.filter((c) => {
     const matchesSearch = c.nome_cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.segmento?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filtering logic remains the same
-    const isReal = c.meta_ads_conectado && 
-                   !isFake(c.nome_cliente) &&
-                   !( (!c.nome_cliente || c.nome_cliente.trim() === "") && c.ultima_sincronizacao?.includes("2026-03-17T19:15:18") );
-    
-    return matchesSearch && isReal;
+    return matchesSearch;
   });
 
   return (

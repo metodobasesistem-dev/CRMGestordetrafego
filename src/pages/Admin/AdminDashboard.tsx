@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../../lib/supabase";
 import { Cliente, DadosCampanha } from "../../types";
-import { TrendingUp, Users, Target, DollarSign, MousePointer2, Eye, BarChart3, Calendar, Filter, ChevronDown, X, Loader2 } from "lucide-react";
+import { TrendingUp, Target, DollarSign, MousePointer2, BarChart3, Filter, ChevronDown, X } from "lucide-react";
 import { 
   AreaChart, 
   Area, 
@@ -9,10 +9,7 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
+  ResponsiveContainer
 } from "recharts";
 import { cn } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
@@ -20,8 +17,21 @@ import { format, subDays, isWithinInterval, parseISO, startOfDay, endOfDay } fro
 import { ptBR } from "date-fns/locale";
 import { Skeleton } from "../../components/ui/Skeleton";
 
+// Hook para largura da janela sem usar window diretamente no JSX
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
+
 export default function AdminDashboard() {
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [dados, setDados] = useState<DadosCampanha[]>([]);
   const [loading, setLoading] = useState(true);
@@ -344,7 +354,7 @@ export default function AdminDashboard() {
                       labelFormatter={(val) => new Date(val).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long' })}
                       formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value), "Investimento"]}
                     />
-                    <Area type="monotone" dataKey="investimento" name="Investimento (R$)" stroke="#6366f1" strokeWidth={window.innerWidth < 768 ? 2 : 3} fillOpacity={1} fill="url(#colorInvest)" />
+                    <Area type="monotone" dataKey="investimento" name="Investimento (R$)" stroke="#6366f1" strokeWidth={isMobile ? 2 : 3} fillOpacity={1} fill="url(#colorInvest)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

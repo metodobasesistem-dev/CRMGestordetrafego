@@ -56,47 +56,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (profileError || !profileData) {
-            // Se falhar ou der timeout, usamos um perfil temporário baseado no Auth do Supabase
-            // Isso evita o loop de redirecionamento para o login
+            // Se falhar ou der timeout, mantemos a sessão para evitar loop de login
             console.log('AuthProvider: Using fallback session to prevent redirect loop');
-            const isOwner = supabaseUser.email === 'natanvileladesouza@gmail.com' || supabaseUser.email === 'contato@natanvilela.com.br';
+
+            // Role padrão: 'admin'. O correto vem do banco, mas isso evita o logout
+            const fallbackRole = 'admin';
             
             setUser({
               uid: supabaseUser.id,
               id: supabaseUser.id,
               email: supabaseUser.email!,
               name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
-              role: isOwner ? 'admin' : 'client',
+              role: fallbackRole,
               allowedClients: []
             } as any);
 
-            // Se o erro foi que o perfil não existe (PGRST116), tentamos criar em background
+            // Se o perfil não existe (PGRST116), criamos em background com role padrão
             if (profileError?.code === 'PGRST116') {
               const defaultProfile = {
                 id: supabaseUser.id,
-                name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0],
+                name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
                 email: supabaseUser.email,
-                role: isOwner ? 'admin' : 'client'
+                role: fallbackRole,
+                allowed_clients: []
               };
-              supabase.from('profiles').insert([defaultProfile]).then(({error}) => {
-                if (error) console.error('AuthProvider: Background profile creation failed:', error);
+              supabase.from('profiles').insert([defaultProfile]).then(({ error: insertErr }) => {
+                if (insertErr) console.error('AuthProvider: Background profile creation failed:', insertErr);
+                else console.log('AuthProvider: Profile created in background successfully.');
               });
             }
           } else {
-            // Perfil carregado com sucesso
+            // Perfil carregado com sucesso — role sempre vem do banco
             setUser({
               uid: supabaseUser.id,
               id: supabaseUser.id,
               email: supabaseUser.email!,
               ...profileData,
               name: profileData.name || profileData.full_name || supabaseUser.email?.split('@')[0],
+              role: profileData.role || 'admin',
               allowedClients: profileData.allowed_clients || []
             } as any);
           }
         } catch (e) {
           console.error('AuthProvider: Unexpected error:', e);
-          // Mesmo em erro inesperado, tentamos manter o usuário logado se houver sessão do Supabase
-          setUser({ uid: supabaseUser.id, email: supabaseUser.email!, role: 'admin' } as any);
+          // Em erro inesperado, mantemos sessão mínima para evitar loop de login
+          setUser({ uid: supabaseUser.id, id: supabaseUser.id, email: supabaseUser.email!, role: 'admin', allowedClients: [] } as any);
         } finally {
           setLoading(false);
         }

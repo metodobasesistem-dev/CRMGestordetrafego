@@ -66,7 +66,7 @@ export default function ClientForm() {
 
   const confirmMetaRedirect = () => {
     setShowMetaRedirectModal(false);
-    navigate("/admin/meta-accounts");
+    navigate("/admin/meta-ads");
   };
 
   const handleConnectGoogle = async () => {
