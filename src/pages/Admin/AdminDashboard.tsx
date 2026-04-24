@@ -128,10 +128,10 @@ export default function AdminDashboard() {
   // Business Finance Metrics
   const faturamentoPeriodo = pagamentos
     .filter(p => p.status === "pago")
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
     
   const despesasPeriodo = despesas
-    .reduce((acc, curr) => acc + curr.valor, 0);
+    .reduce((acc, curr) => acc + Number(curr.valor || 0), 0);
     
   const lucroLiquido = faturamentoPeriodo - despesasPeriodo;
   const ticketMedio = totalClientesAtivos > 0 ? faturamentoPeriodo / totalClientesAtivos : 0;
@@ -160,10 +160,10 @@ export default function AdminDashboard() {
     return last30Days.map(date => {
       const rec = pagamentos
         .filter(p => p.status === "pago" && p.data_pagamento === date)
-        .reduce((s, p) => s + p.valor, 0);
+        .reduce((s, p) => s + Number(p.valor || 0), 0);
       const desp = despesas
         .filter(d => d.data_despesa === date)
-        .reduce((s, d) => s + d.valor, 0);
+        .reduce((s, d) => s + Number(d.valor || 0), 0);
       return { date, faturamento: rec, despesas: desp };
     });
   }, [pagamentos, despesas]);
