@@ -69,7 +69,7 @@ export default function AdminDashboard() {
 
         const [clientesRes, dadosRes, pagamentosRes, despesasRes] = await Promise.all([
           supabase.from('clientes').select('id, nome_cliente, meta_ads_conectado'),
-          supabase.from('dados_campanhas').select('cliente_id, data, valor_gasto, cliques, impressoes, plataforma').gte('data', dateStr),
+          supabase.from('dados_campanhas').select('cliente_id, data, investimento, cliques, impressoes, plataforma').gte('data', dateStr),
           supabase.from('pagamentos').select('valor, data_pagamento, mes_referencia, status').gte('mes_referencia', dateStr),
           supabase.from('despesas').select('valor, data_despesa, mes_referencia').gte('mes_referencia', dateStr)
         ]);
