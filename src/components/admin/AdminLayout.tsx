@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity } from "lucide-react";
+import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard } from "lucide-react";
 import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -74,6 +74,15 @@ export default function AdminLayout() {
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
     { name: "Atividades", href: "/admin/atividades", icon: Activity },
     { name: "Usuários", href: "/admin/usuarios", icon: Shield },
+  ];
+
+  const navFinanceiro = [
+    { name: "Visão Geral", href: "/admin/financeiro", icon: DollarSign },
+    { name: "Pagamentos", href: "/admin/financeiro/pagamentos", icon: CreditCard },
+    { name: "Despesas", href: "/admin/financeiro/despesas", icon: TrendingDown },
+  ];
+
+  const navIntegracoes = [
     { name: "Meta Ads", href: "/admin/meta-ads", icon: Facebook },
     { name: "Google Ads", href: "/admin/google-ads", icon: Globe },
     { name: "Config", href: "/admin/configuracoes", icon: Settings },
@@ -133,7 +142,42 @@ export default function AdminLayout() {
             })}
           </div>
 
-          {/* Dynamic Client Dashboards */}
+          {/* Financeiro */}
+          <div className="space-y-1.5">
+            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Financeiro</p>
+            {navFinanceiro.map((item) => {
+              const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
+              return (
+                <Link key={item.name} to={item.href}
+                  className={cn("flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
+                    isActive ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                  )}
+                >
+                  <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500")} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Integrações */}
+          <div className="space-y-1.5">
+            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Integrações</p>
+            {navIntegracoes.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link key={item.name} to={item.href}
+                  className={cn("flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
+                    isActive ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                  )}
+                >
+                  <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-indigo-500")} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+
           <div className="space-y-1">
             <button 
               onClick={() => setIsDashboardOpen(!isDashboardOpen)}
