@@ -20,8 +20,11 @@ import { format, isPast, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
 import { Toast } from "../../components/ui/Toast";
+import { logActivity } from "../../lib/activityLog";
+import { useAuth } from "../../context/AuthContext";
 
 export default function TaskList() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -139,6 +142,15 @@ export default function TaskList() {
       }
       setIsModalOpen(false);
       setToast({ message: `Tarefa ${editingTask ? 'atualizada' : 'criada'} com sucesso!`, type: "success" });
+      if (user) {
+        logActivity({
+          userId: user.uid,
+          action: editingTask ? 'update' : 'create',
+          entity: 'task',
+          entityId: editingTask?.id || 'new',
+          entityName: taskForm.title,
+        });
+      }
     } catch (error) {
       console.error("Erro ao salvar tarefa:", error);
       setToast({ message: "Erro ao salvar tarefa", type: "error" });
@@ -173,6 +185,16 @@ export default function TaskList() {
       
       if (error) throw error;
       setToast({ message: "Tarefa excluída!", type: "success" });
+      if (user) {
+        const task = tasks.find(t => t.id === id);
+        logActivity({
+          userId: user.uid,
+          action: 'delete',
+          entity: 'task',
+          entityId: id,
+          entityName: task?.title || 'Tarefa',
+        });
+      }
     } catch (error) {
       console.error("Erro ao excluir tarefa:", error);
       setToast({ message: "Erro ao excluir tarefa", type: "error" });

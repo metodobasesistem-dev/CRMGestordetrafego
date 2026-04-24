@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote } from "lucide-react";
+import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity } from "lucide-react";
 import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -72,6 +72,7 @@ export default function AdminLayout() {
     { name: "Tarefas", href: "/admin/tarefas", icon: CheckSquare },
     { name: "Anotações", href: "/admin/anotacoes", icon: StickyNote },
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
+    { name: "Atividades", href: "/admin/atividades", icon: Activity },
     { name: "Usuários", href: "/admin/usuarios", icon: Shield },
     { name: "Meta Ads", href: "/admin/meta-ads", icon: Facebook },
     { name: "Google Ads", href: "/admin/google-ads", icon: Globe },

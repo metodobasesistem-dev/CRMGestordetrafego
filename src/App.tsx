@@ -13,6 +13,7 @@ import CalendarView from "./pages/Admin/CalendarView";
 import GeneralSettings from "./pages/Admin/GeneralSettings";
 import MetaAdsSettings from "./pages/Admin/MetaAdsSettings";
 import GoogleAdsSettings from "./pages/Admin/GoogleAdsSettings";
+import ActivityLog from "./pages/Admin/ActivityLog";
 import Login from "./pages/Login";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -39,6 +40,7 @@ export default function App() {
                 <Route path="configuracoes" element={<GeneralSettings />} />
                 <Route path="meta-ads" element={<MetaAdsSettings />} />
                 <Route path="google-ads" element={<GoogleAdsSettings />} />
+                <Route path="atividades" element={<ActivityLog />} />
                 <Route path="novo" element={<ClientForm />} />
                 <Route path="editar/:id" element={<ClientForm />} />
                 <Route path="dashboard/:id" element={<InternalDashboard />} />
