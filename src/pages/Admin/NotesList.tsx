@@ -5,6 +5,8 @@ import { Plus, Trash2, Calendar as CalendarIcon, User, Search, StickyNote, X, Ed
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Toast } from "../../components/ui/Toast";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function NotesList() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -13,6 +15,7 @@ export default function NotesList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   
   const [noteForm, setNoteForm] = useState({
     title: "",
@@ -115,9 +118,10 @@ export default function NotesList() {
 
       setIsModalOpen(false);
       fetchNotes();
+      setToast({ message: `Anotação ${editingNote ? 'atualizada' : 'criada'} com sucesso!`, type: "success" });
     } catch (error) {
       console.error("Erro ao salvar anotação:", error);
-      alert("Erro ao salvar anotação. Verifique se todas as colunas existem no banco.");
+      setToast({ message: "Erro ao salvar anotação", type: "error" });
     } finally {
       setLoading(false);
     }
@@ -133,8 +137,10 @@ export default function NotesList() {
       
       if (error) throw error;
       fetchNotes();
+      setToast({ message: "Anotação excluída!", type: "success" });
     } catch (error) {
       console.error("Erro ao excluir anotação:", error);
+      setToast({ message: "Erro ao excluir anotação", type: "error" });
     }
   };
 
@@ -317,6 +323,16 @@ export default function NotesList() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

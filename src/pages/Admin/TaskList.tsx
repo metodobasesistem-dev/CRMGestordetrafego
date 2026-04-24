@@ -20,6 +20,7 @@ import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
+import { Toast } from "../../components/ui/Toast";
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -35,6 +36,8 @@ export default function TaskList() {
     cliente_id: "",
     status: "pending" as Task['status']
   });
+
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -133,8 +136,10 @@ export default function TaskList() {
         if (error) throw error;
       }
       setIsModalOpen(false);
+      setToast({ message: `Tarefa ${editingTask ? 'atualizada' : 'criada'} com sucesso!`, type: "success" });
     } catch (error) {
       console.error("Erro ao salvar tarefa:", error);
+      setToast({ message: "Erro ao salvar tarefa", type: "error" });
     }
   };
 
@@ -149,8 +154,10 @@ export default function TaskList() {
         .eq('id', taskId);
       
       if (error) throw error;
+      setToast({ message: "Status atualizado!", type: "success" });
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
+      setToast({ message: "Erro ao atualizar status", type: "error" });
     }
   };
 
@@ -163,8 +170,10 @@ export default function TaskList() {
         .eq('id', id);
       
       if (error) throw error;
+      setToast({ message: "Tarefa excluída!", type: "success" });
     } catch (error) {
       console.error("Erro ao excluir tarefa:", error);
+      setToast({ message: "Erro ao excluir tarefa", type: "error" });
     }
   };
 
@@ -411,6 +420,16 @@ export default function TaskList() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
