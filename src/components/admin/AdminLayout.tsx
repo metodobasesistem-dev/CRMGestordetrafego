@@ -325,20 +325,76 @@ export default function AdminLayout() {
             </div>
 
             <div className="space-y-2">
-              <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Outras Opções</p>
-              
-              {/* Remaining Nav Items */}
-              {navItems.slice(5).map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full flex items-center gap-4 p-4 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                >
-                  <item.icon className="w-6 h-6" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              ))}
+              {/* Remaining Main Nav Items */}
+              {navItems.slice(5).length > 0 && (
+                <>
+                  <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Menu Principal</p>
+                  {navItems.slice(5).map((item) => {
+                    const isActive = location.pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-4 rounded-xl transition-colors",
+                          isActive
+                            ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold"
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        <item.icon className="w-6 h-6" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Financeiro */}
+              <p className="px-3 pt-4 text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2">💰 Financeiro</p>
+              {navFinanceiro.map((item) => {
+                const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "w-full flex items-center gap-4 p-4 rounded-xl transition-colors",
+                      isActive
+                        ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-bold"
+                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <item.icon className="w-6 h-6 text-emerald-500" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+
+              {/* Integrações */}
+              <p className="px-3 pt-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Integrações</p>
+              {navIntegracoes.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "w-full flex items-center gap-4 p-4 rounded-xl transition-colors",
+                      isActive
+                        ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 font-bold"
+                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <item.icon className="w-6 h-6" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+
 
               <button
                 onClick={() => {
