@@ -16,8 +16,38 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { format, isPast, parseISO } from "date-fns";
+import { format, isPast, parseISO, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+/**
+ * Converte qualquer formato de data do banco para 'yyyy-MM-dd'.
+ * Trata ISO com timezone, datas simples, etc.
+ */
+function safeToInputDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return format(new Date(), "yyyy-MM-dd");
+  try {
+    // Remove a parte de tempo se existir (2025-04-24T03:00:00+00:00 → 2025-04-24)
+    const datePart = dateStr.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+    // Fallback: tenta parseISO completo
+    const parsed = parseISO(dateStr);
+    if (isValid(parsed)) return format(parsed, "yyyy-MM-dd");
+  } catch {}
+  return format(new Date(), "yyyy-MM-dd");
+}
+
+/**
+ * Exibe data no formato dd/MM de forma segura.
+ */
+function safeFormatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "Sem data";
+  try {
+    const datePart = dateStr.split('T')[0];
+    const parsed = parseISO(datePart);
+    if (isValid(parsed)) return format(parsed, "dd/MM", { locale: ptBR });
+  } catch {}
+  return "Data inválida";
+}
 import { motion, AnimatePresence } from "motion/react";
 import { Toast } from "../../components/ui/Toast";
 import { logActivity } from "../../lib/activityLog";
@@ -97,7 +127,7 @@ export default function TaskList() {
       setTaskForm({
         title: task.title,
         description: task.description || "",
-        date: task.date,
+        date: safeToInputDate(task.date),  // ✅ Normaliza para yyyy-MM-dd
         cliente_id: task.cliente_id,
         status: task.status
       });
@@ -397,13 +427,7 @@ export default function TaskList() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
                             <CalendarIcon className="w-3 h-3" />
-                            {(() => {
-                              try {
-                                return task.date ? format(new Date(task.date + 'T12:00:00'), "dd/MM") : "Sem data";
-                              } catch (e) {
-                                return "Data inválida";
-                              }
-                            })()}
+                            {safeFormatDate(task.date)}
                           </div>
 
                           <div className="flex items-center gap-1">
