@@ -48,13 +48,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      // Tenta recuperar do cache para exibição imediata
+      const cachedData = sessionStorage.getItem('dashboard_cache');
+      if (cachedData && !clientes.length) {
+        const parsed = JSON.parse(cachedData);
+        setClientes(parsed.clientes || []);
+        setDados(parsed.dados || []);
+        setPagamentos(parsed.pagamentos || []);
+        setDespesas(parsed.despesas || []);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
       try {
+        // Busca apenas colunas necessárias e limita a 90 dias para performance inicial
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        const dateStr = ninetyDaysAgo.toISOString().split('T')[0];
+
         const [clientesRes, dadosRes, pagamentosRes, despesasRes] = await Promise.all([
-          supabase.from('clientes').select('*'),
-          supabase.from('dados_campanhas').select('*'),
-          supabase.from('pagamentos').select('*'),
-          supabase.from('despesas').select('*')
+          supabase.from('clientes').select('id, nome_cliente, meta_ads_conectado'),
+          supabase.from('dados_campanhas').select('cliente_id, data, valor_gasto, cliques, impressoes, plataforma').gte('data', dateStr),
+          supabase.from('pagamentos').select('valor, data_pagamento, mes_referencia, status').gte('mes_referencia', dateStr),
+          supabase.from('despesas').select('valor, data_despesa, mes_referencia').gte('mes_referencia', dateStr)
         ]);
 
         if (clientesRes.error) throw clientesRes.error;
@@ -62,10 +79,24 @@ export default function AdminDashboard() {
         if (pagamentosRes.error) throw pagamentosRes.error;
         if (despesasRes.error) throw despesasRes.error;
 
-        setClientes(clientesRes.data || []);
-        setDados(dadosRes.data || []);
-        setPagamentos(pagamentosRes.data || []);
-        setDespesas(despesasRes.data || []);
+        const newClientes = clientesRes.data || [];
+        const newDados = dadosRes.data || [];
+        const newPagamentos = pagamentosRes.data || [];
+        const newDespesas = despesasRes.data || [];
+
+        setClientes(newClientes);
+        setDados(newDados);
+        setPagamentos(newPagamentos);
+        setDespesas(newDespesas);
+        
+        // Atualiza o cache
+        sessionStorage.setItem('dashboard_cache', JSON.stringify({
+          clientes: newClientes,
+          dados: newDados,
+          pagamentos: newPagamentos,
+          despesas: newDespesas
+        }));
+        
         setError(null);
       } catch (error) {
         console.error("Erro ao carregar dados do dashboard:", error);
