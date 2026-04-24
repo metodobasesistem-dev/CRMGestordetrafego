@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(true);
           console.log('AuthProvider: Fetching profile for:', supabaseUser.id);
           
-          // Timeout de 5 segundos para a busca do perfil
+          // Timeout estendido para 15 segundos para evitar loops em conexões lentas
           const fetchWithTimeout = async () => {
             return await supabase
               .from('profiles')
@@ -37,56 +37,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
 
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 5000)
+            setTimeout(() => reject(new Error('Timeout ao buscar perfil')), 15000)
           );
 
-          const { data: profile, error } = await Promise.race([
-            fetchWithTimeout(),
-            timeoutPromise
-          ]) as any;
+          let profileData = null;
+          let profileError = null;
 
-          if (error) {
-            if (error.code === 'PGRST116') {
-              console.log('AuthProvider: Profile missing. Creating default...');
-              const isOwner = supabaseUser.email === 'natanvileladesouza@gmail.com' || supabaseUser.email === 'contato@natanvilela.com.br';
-              const defaultProfile = {
-                id: supabaseUser.id,
-                name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'Novo Usuário',
-                email: supabaseUser.email,
-                role: isOwner ? 'admin' : 'client',
-                allowed_clients: [],
-              };
-              
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert([defaultProfile]);
+          try {
+            const result = await Promise.race([
+              fetchWithTimeout(),
+              timeoutPromise
+            ]) as any;
+            profileData = result.data;
+            profileError = result.error;
+          } catch (raceError: any) {
+            console.warn('AuthProvider: Profile fetch timed out or failed, using fallback.');
+            profileError = raceError;
+          }
 
-              if (insertError) {
-                console.error('AuthProvider: Bootstrap failed:', insertError);
-                setUser(null);
-              } else {
-                setUser({
-                  uid: supabaseUser.id,
-                  email: supabaseUser.email!,
-                  ...defaultProfile,
-                  allowedClients: []
-                } as any);
-              }
-            } else {
-              console.error('AuthProvider: Database error:', error);
-              setUser(null);
-            }
-          } else {
+          if (profileError || !profileData) {
+            // Se falhar ou der timeout, usamos um perfil temporário baseado no Auth do Supabase
+            // Isso evita o loop de redirecionamento para o login
+            console.log('AuthProvider: Using fallback session to prevent redirect loop');
+            const isOwner = supabaseUser.email === 'natanvileladesouza@gmail.com' || supabaseUser.email === 'contato@natanvilela.com.br';
+            
             setUser({
               uid: supabaseUser.id,
+              id: supabaseUser.id,
               email: supabaseUser.email!,
-              ...profile,
-              allowedClients: profile.allowed_clients || []
+              name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
+              role: isOwner ? 'admin' : 'client',
+              allowedClients: []
+            } as any);
+
+            // Se o erro foi que o perfil não existe (PGRST116), tentamos criar em background
+            if (profileError?.code === 'PGRST116') {
+              const defaultProfile = {
+                id: supabaseUser.id,
+                name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0],
+                email: supabaseUser.email,
+                role: isOwner ? 'admin' : 'client'
+              };
+              supabase.from('profiles').insert([defaultProfile]).then(({error}) => {
+                if (error) console.error('AuthProvider: Background profile creation failed:', error);
+              });
+            }
+          } else {
+            // Perfil carregado com sucesso
+            setUser({
+              uid: supabaseUser.id,
+              id: supabaseUser.id,
+              email: supabaseUser.email!,
+              ...profileData,
+              name: profileData.name || profileData.full_name || supabaseUser.email?.split('@')[0],
+              allowedClients: profileData.allowed_clients || []
             } as any);
           }
         } catch (e) {
           console.error('AuthProvider: Unexpected error:', e);
-          setUser(null);
+          // Mesmo em erro inesperado, tentamos manter o usuário logado se houver sessão do Supabase
+          setUser({ uid: supabaseUser.id, email: supabaseUser.email!, role: 'admin' } as any);
         } finally {
           setLoading(false);
         }
