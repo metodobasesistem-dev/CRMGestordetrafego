@@ -92,7 +92,7 @@ export default function AdminDashboard() {
 
   // Usa utilitário centralizado (elimina código duplicado)
   const realClientes = useMemo(() => 
-    clientes.filter(c => c.meta_ads_conectado && !isFakeClient(c.nome_cliente)),
+    clientes.filter(c => !isFakeClient(c.nome_cliente)),
   [clientes]);
 
   const realClientIds = useMemo(() => realClientes.map(c => c.id), [realClientes]);
