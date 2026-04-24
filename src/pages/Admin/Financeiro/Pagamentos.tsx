@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../context/AuthContext";
 import { formatCurrency } from "../../../lib/utils";
@@ -6,7 +6,7 @@ import { Plus, Search, X, CheckCircle2, Clock, AlertTriangle, Download, Filter, 
 import { cn } from "../../../lib/utils";
 import { format, parseISO, isValid, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Skeleton } from "../../components/ui/Skeleton";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { motion, AnimatePresence } from "motion/react";
 import { Toast } from "../../../components/ui/Toast";
 
