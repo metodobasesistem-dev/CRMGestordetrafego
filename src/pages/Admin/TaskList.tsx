@@ -7,17 +7,16 @@ import {
   Calendar as CalendarIcon, 
   User, 
   Search, 
-  CheckSquare, 
   X, 
-  MoreVertical, 
   Edit2, 
   ChevronRight, 
   ChevronLeft,
   Clock,
-  AlertCircle
+  Filter,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { format } from "date-fns";
+import { format, isPast, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "motion/react";
 import { Toast } from "../../components/ui/Toast";
@@ -28,6 +27,9 @@ export default function TaskList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterClienteId, setFilterClienteId] = useState("");
+  const [filterStatus, setFilterStatus] = useState<Task['status'] | "all">("all");
+  const [showFilters, setShowFilters] = useState(false);
   
   const [taskForm, setTaskForm] = useState({
     title: "",
@@ -177,11 +179,20 @@ export default function TaskList() {
     }
   };
 
+  const isOverdue = (task: Task) => {
+    if (task.status === 'completed' || !task.date) return false;
+    try { return isPast(parseISO(task.date + 'T23:59:59')); } catch { return false; }
+  };
+
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = task.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesCliente = filterClienteId === "" || task.cliente_id === filterClienteId;
+    const matchesStatus = filterStatus === "all" || task.status === filterStatus;
+    return matchesSearch && matchesCliente && matchesStatus;
   });
+
+  const activeFilters = (filterClienteId ? 1 : 0) + (filterStatus !== "all" ? 1 : 0);
 
   const getClienteName = (id: string) => {
     return clientes.find(c => c.id === id)?.nome_cliente || "Cliente não encontrado";
@@ -212,13 +223,29 @@ export default function TaskList() {
             />
           </div>
           <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-bold transition-all",
+              showFilters || activeFilters > 0
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+            )}
+          >
+            <Filter className="w-4 h-4" />
+            Filtros
+            {activeFilters > 0 && (
+              <span className="bg-white/30 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                {activeFilters}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => handleOpenModal()}
             className="hidden md:flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-lg shadow-indigo-200 dark:shadow-none"
           >
             <Plus className="w-5 h-5" />
             Nova Tarefa
           </button>
-
           {/* Mobile FAB */}
           <button
             onClick={() => handleOpenModal()}
@@ -228,6 +255,53 @@ export default function TaskList() {
           </button>
         </div>
       </div>
+
+      {/* Filtros Avançados */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cliente</label>
+              <select
+                value={filterClienteId}
+                onChange={(e) => setFilterClienteId(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                <option value="">Todos os clientes</option>
+                {clientes.map(c => (
+                  <option key={c.id} value={c.id}>{c.nome_cliente}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+              >
+                <option value="all">Todos os status</option>
+                <option value="pending">Pendente</option>
+                <option value="in_progress">Em Andamento</option>
+                <option value="completed">Concluído</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => { setFilterClienteId(""); setFilterStatus("all"); }}
+                className="w-full py-2 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-red-500 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors"
+              >
+                Limpar Filtros
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-col lg:flex-row gap-6 overflow-x-auto pb-4 min-h-[600px]">
         {columns.map((column) => (
@@ -252,12 +326,24 @@ export default function TaskList() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all group"
+                      className={cn(
+                        "bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all group",
+                        isOverdue(task)
+                          ? "border-red-200 dark:border-red-900/50 bg-red-50/30 dark:bg-red-950/10"
+                          : "border-slate-200 dark:border-slate-800"
+                      )}
                     >
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-bold text-slate-900 dark:text-white leading-tight">
-                          {task.title}
-                        </h3>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-900 dark:text-white leading-tight">
+                            {task.title}
+                          </h3>
+                          {isOverdue(task) && (
+                            <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-black text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                              <AlertTriangle className="w-2.5 h-2.5" /> Vencida
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
                             onClick={() => handleOpenModal(task)}

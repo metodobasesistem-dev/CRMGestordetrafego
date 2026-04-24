@@ -13,6 +13,7 @@ export default function NotesList() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterClienteId, setFilterClienteId] = useState("");
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -147,7 +148,8 @@ export default function NotesList() {
   const filteredNotes = notes.filter(note => {
     const matchesSearch = note.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          note.content?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesCliente = filterClienteId === "" || note.cliente_id === filterClienteId;
+    return matchesSearch && matchesCliente;
   });
 
   const getClienteName = (id: string | null) => {
@@ -171,15 +173,27 @@ export default function NotesList() {
         </button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Buscar anotações..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Buscar anotações..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-slate-900 dark:text-white"
+          />
+        </div>
+        <select
+          value={filterClienteId}
+          onChange={(e) => setFilterClienteId(e.target.value)}
+          className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium text-slate-700 dark:text-slate-300 transition-all"
+        >
+          <option value="">Todos os clientes</option>
+          {clientes.map(c => (
+            <option key={c.id} value={c.id}>{c.nome_cliente}</option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -192,11 +206,16 @@ export default function NotesList() {
             <p className="text-slate-500 dark:text-slate-400">Crie sua primeira anotação para começar.</p>
           </div>
         ) : (
-          filteredNotes.map((note) => (
-            <div
-              key={note.id}
-              className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-all hover:shadow-md relative"
-            >
+          <AnimatePresence mode="popLayout">
+            {filteredNotes.map((note) => (
+              <motion.div
+                layout
+                key={note.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-all hover:shadow-md relative"
+              >
               <div className="flex items-start justify-between gap-2 mb-4">
                 <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight">
                   {note.title}
@@ -237,8 +256,9 @@ export default function NotesList() {
                   })()}
                 </div>
               </div>
-            </div>
-          ))
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 
