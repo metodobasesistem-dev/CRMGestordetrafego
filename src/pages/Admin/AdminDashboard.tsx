@@ -305,7 +305,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {filteredDados.length === 0 ? (
+      {(filteredDados.length === 0 && pagamentos.length === 0 && despesas.length === 0) ? (
         <div className="flex flex-col items-center justify-center p-8 lg:p-20 text-center space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="p-3 lg:p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-full">
             <BarChart3 className="w-6 h-6 lg:w-8 lg:h-8 text-indigo-500" />
