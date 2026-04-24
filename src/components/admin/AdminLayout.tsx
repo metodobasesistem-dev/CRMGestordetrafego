@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard } from "lucide-react";
+import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard, Instagram } from "lucide-react";
 import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -74,6 +74,7 @@ export default function AdminLayout() {
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
     { name: "Atividades", href: "/admin/atividades", icon: Activity },
     { name: "Usuários", href: "/admin/usuarios", icon: Shield },
+    { name: "Redes Sociais", href: "/admin/social", icon: Instagram },
   ];
 
   const navFinanceiro = [

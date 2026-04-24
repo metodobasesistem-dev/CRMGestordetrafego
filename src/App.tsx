@@ -17,6 +17,7 @@ import ActivityLog from "./pages/Admin/ActivityLog";
 import FinanceiroDashboard from "./pages/Admin/Financeiro/FinanceiroDashboard";
 import Pagamentos from "./pages/Admin/Financeiro/Pagamentos";
 import Despesas from "./pages/Admin/Financeiro/Despesas";
+import SocialInsights from "./pages/Admin/SocialInsights";
 import Login from "./pages/Login";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="financeiro" element={<FinanceiroDashboard />} />
                 <Route path="financeiro/pagamentos" element={<Pagamentos />} />
                 <Route path="financeiro/despesas" element={<Despesas />} />
+                <Route path="social" element={<SocialInsights />} />
                 <Route path="novo" element={<ClientForm />} />
                 <Route path="editar/:id" element={<ClientForm />} />
                 <Route path="dashboard/:id" element={<InternalDashboard />} />

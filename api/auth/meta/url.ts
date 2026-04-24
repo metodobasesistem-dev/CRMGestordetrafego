@@ -5,7 +5,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const appId = process.env.META_APP_ID;
   const baseUrl = (origin as string) || process.env.APP_URL || `https://${req.headers.host}`;
   const redirectUri = process.env.META_REDIRECT_URI || `${baseUrl}/api/auth/facebook/callback`;
-  const scopes = ["ads_read", "business_management"].join(",");
+  const scopes = [
+    "ads_read",
+    "business_management",
+    "pages_show_list",
+    "pages_read_engagement",
+    "instagram_basic",
+    "instagram_manage_insights"
+  ].join(",");
   
   const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&response_type=code&state=${cliente_id}`;
   res.status(200).json({ url });
