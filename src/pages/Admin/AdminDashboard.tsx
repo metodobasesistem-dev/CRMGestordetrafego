@@ -18,6 +18,7 @@ import { cn } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { format, subDays, isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Skeleton } from "../../components/ui/Skeleton";
 
 export default function AdminDashboard() {
   const { theme } = useTheme();
