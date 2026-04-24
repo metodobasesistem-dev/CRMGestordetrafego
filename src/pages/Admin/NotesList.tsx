@@ -184,7 +184,13 @@ export default function NotesList() {
                 </div>
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                   <CalendarIcon className="w-3.5 h-3.5" />
-                  {format(new Date(note.date + 'T12:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  {(() => {
+                    try {
+                      return note.date ? format(new Date(note.date + 'T12:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Sem data";
+                    } catch (e) {
+                      return "Data inválida";
+                    }
+                  })()}
                 </div>
               </div>
             </div>

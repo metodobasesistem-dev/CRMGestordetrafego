@@ -280,7 +280,13 @@ export default function TaskList() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
                             <CalendarIcon className="w-3 h-3" />
-                            {format(new Date(task.date + 'T12:00:00'), "dd/MM")}
+                            {(() => {
+                              try {
+                                return task.date ? format(new Date(task.date + 'T12:00:00'), "dd/MM") : "Sem data";
+                              } catch (e) {
+                                return "Data inválida";
+                              }
+                            })()}
                           </div>
 
                           <div className="flex items-center gap-1">
