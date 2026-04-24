@@ -193,15 +193,25 @@ export default function AdminDashboard() {
 
   if (loading) return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center px-1">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-1/2 rounded-lg" />
+            <Skeleton className="h-3 w-1/3 rounded-lg" />
+          </div>
         </div>
-        <Skeleton className="h-10 w-32 rounded-xl" />
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+              <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-2 w-1/2 rounded-full" />
+                <Skeleton className="h-4 w-3/4 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Skeleton className="lg:col-span-2 h-[450px] rounded-3xl" />
@@ -414,6 +424,7 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+          </div>
           {/* Ads Performance Summary (O Trabalho do Gestor) */}
           <div className="bg-slate-50 dark:bg-slate-800/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

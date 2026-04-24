@@ -223,7 +223,7 @@ export default function AiInsights() {
     // Subscribe to changes
     const subscription = supabase
       .channel('clientes-changes-insights')
-      .on('postgres_changes', { event: '*', table: 'clientes' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, () => {
         fetchClientes();
       })
       .subscribe();
@@ -992,6 +992,9 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
             </div>
           )}
 
+          {/* TAB: Análise Estratégica (Estratégia & Ação) */}
+          {activeTab === 'analise' && (
+            <div className="space-y-8">
               {/* AI Logic Explanation (How it works) */}
               <div className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 p-6 rounded-3xl flex flex-col md:flex-row items-center gap-6">
                 <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
