@@ -37,7 +37,8 @@ export default function Pagamentos() {
 
   const emptyForm = {
     cliente_id: "", valor: "", mes_referencia: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    data_vencimento: "", status: "pendente", metodo_pagamento: "pix", observacao: ""
+    data_vencimento: "", status: "pendente", metodo_pagamento: "pix", observacao: "",
+    recorrente: false
   };
   const [form, setForm] = useState(emptyForm);
 
@@ -114,10 +115,10 @@ export default function Pagamentos() {
 
   // CSV Export
   const exportCSV = () => {
-    const rows = [["Cliente","Mês","Valor","Vencimento","Pagamento","Status","Método","Observação"],
+    const rows = [["Cliente","Mês","Valor","Vencimento","Pagamento","Status","Método","Recorrente","Observação"],
       ...filtered.map(p => [
         nomeCliente(p.cliente_id), p.mes_referencia?.slice(0,7) || "", p.valor,
-        p.data_vencimento || "", p.data_pagamento || "", p.status, p.metodo_pagamento || "", p.observacao || ""
+        p.data_vencimento || "", p.data_pagamento || "", p.status, p.metodo_pagamento || "", p.recorrente ? "Sim" : "Não", p.observacao || ""
       ])
     ];
     const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
@@ -137,6 +138,7 @@ export default function Pagamentos() {
         <td>${p.data_vencimento||""}</td><td>${p.data_pagamento||"—"}</td>
         <td>${STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG]?.label||p.status}</td>
         <td>${p.metodo_pagamento||""}</td>
+        <td>${p.recorrente ? "Sim" : "Não"}</td>
       </tr>`).join("");
     w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pagamentos</title>
     <style>body{font-family:sans-serif;padding:2rem}h1{color:#4f46e5;margin-bottom:1rem}
@@ -145,7 +147,7 @@ export default function Pagamentos() {
     @media print{body{padding:0}}</style></head><body>
     <h1>Relatório de Pagamentos</h1>
     <p style="color:#64748b;margin-bottom:1rem">Período: ${filterMes || "Todos"} · Gerado em: ${format(new Date(),"dd/MM/yyyy HH:mm")}</p>
-    <table><thead><tr><th>Cliente</th><th>Mês</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Método</th></tr></thead>
+    <table><thead><tr><th>Cliente</th><th>Mês</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th>Método</th><th>Recorrente</th></tr></thead>
     <tbody>${rows}</tbody></table></body></html>`);
     w.document.close();
     w.print();
@@ -214,7 +216,7 @@ export default function Pagamentos() {
           <table className="w-full text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                {["Cliente","Mês Ref.","Valor","Vencimento","Pagamento","Status","Método","Ações"].map(h => (
+                {["Cliente","Mês Ref.","Valor","Vencimento","Pagamento","Status","Método","Recorrente","Ações"].map(h => (
                   <th key={h} className="px-5 py-3.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -247,6 +249,11 @@ export default function Pagamentos() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 capitalize">{p.metodo_pagamento || "—"}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", p.recorrente ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" : "bg-slate-100 text-slate-400 dark:bg-slate-800")}>
+                        {p.recorrente ? "Sim" : "Não"}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {p.status !== "pago" && (
@@ -298,6 +305,9 @@ export default function Pagamentos() {
                       <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold mt-1", sc.color)}>
                         <StatusIcon className="w-2.5 h-2.5"/>{sc.label}
                       </span>
+                      {p.recorrente && (
+                        <span className="block text-[9px] font-bold text-indigo-500 uppercase tracking-tighter mt-1">Recorrente</span>
+                      )}
                     </div>
                   </div>
                   
@@ -393,6 +403,12 @@ export default function Pagamentos() {
                     <textarea value={form.observacao} onChange={e => setForm(f => ({...f, observacao: e.target.value}))} rows={2} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="Opcional..."/>
                   </div>
                 </div>
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <div className={cn("w-10 h-5 rounded-full transition-colors relative", form.recorrente ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-700")} onClick={() => setForm((f: any) => ({...f, recorrente: !f.recorrente}))}>
+                    <div className={cn("absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform", form.recorrente ? "translate-x-5" : "translate-x-0.5")}/>
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Pagamento recorrente (mensal)</span>
+                </label>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
                   <button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors">{editingId ? "Salvar" : "Lançar"}</button>
