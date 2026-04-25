@@ -12,6 +12,7 @@ import OpenAI from "openai";
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabaseAdmin } from "./api/lib/supabase-admin";
 import crypto from "crypto";
+import { auditLog } from "./api/lib/audit";
 import { 
   format, 
   subDays, 
@@ -289,6 +290,20 @@ async function startServer() {
   app.use(express.json());
   const PORT = 3000;
 
+  // --- GLOBAL REQUEST LOGGER ---
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      console.log(`[Request] ${req.method} ${req.path}`);
+      // Log silencioso de toda requisição API
+      auditLog({
+        action: `API_REQUEST_${req.method}`,
+        details: { path: req.path, query: req.query },
+        req
+      });
+    }
+    next();
+  });
+
   // --- API KEY AUTH MIDDLEWARE ---
   const apiKeyAuth = async (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
@@ -450,6 +465,15 @@ async function startServer() {
 
     try {
       const accountId = (ad_account_id as string).startsWith('act_') ? ad_account_id : `act_${ad_account_id}`;
+      
+      // Log de Auditoria: Início da busca
+      auditLog({
+        action: 'META_INSIGHTS_FETCH',
+        entityType: 'ad_account',
+        entityId: accountId,
+        details: { date_preset, since, until },
+        req
+      });
       
       // 1. Determinar Período Final
       let finalSince = since as string;
@@ -1258,6 +1282,15 @@ async function startServer() {
     if (!customer_id) {
       return res.status(400).json({ error: "Parâmetro 'customer_id' é obrigatório." });
     }
+
+    // Auditoria
+    auditLog({
+      action: 'GOOGLE_INSIGHTS_FETCH',
+      entityType: 'google_customer',
+      entityId: customer_id as string,
+      details: { date_preset, since, until },
+      req
+    });
 
     try {
       const devToken = (process.env.GOOGLE_DEVELOPER_TOKEN || process.env.GOOGLE_ADS_DEVELOPER_TOKEN || "").trim();
