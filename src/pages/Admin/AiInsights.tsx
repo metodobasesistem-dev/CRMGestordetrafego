@@ -260,6 +260,8 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
 
   const handleSaveConfig = async () => {
     setSavingConfig(true);
+    setError(null);
+    setSuccess(null);
     try {
       const { error } = await supabase
         .from('config_ia')
@@ -270,9 +272,11 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
         });
       
       if (error) throw error;
+      setSuccess("Chave de API salva com sucesso!");
       setShowConfig(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar config:", error);
+      setError("Erro ao salvar chave: " + error.message);
     } finally {
       setSavingConfig(false);
     }
@@ -280,6 +284,8 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
 
   const handleSavePrompt = async () => {
     setSavingPrompt(true);
+    setError(null);
+    setSuccess(null);
     try {
       const { error } = await supabase
         .from('config_ia')
@@ -290,9 +296,11 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
         });
 
       if (error) throw error;
+      setSuccess("Prompt de análise salvo com sucesso!");
       setShowPromptConfig(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar prompt:", error);
+      setError("Erro ao salvar prompt: " + error.message);
     } finally {
       setSavingPrompt(false);
     }
