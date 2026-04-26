@@ -123,8 +123,13 @@ export default function MetaAdsSettings() {
     try {
       const response = await fetch(`/api/meta/sync-accounts?access_token=${account.access_token}&account_ids=${account.id}`);
       const data = await response.json();
-      if (data.success) {
-        setSuccess(`Saldo da conta ${account.name} atualizado.`);
+      if (data.success && data.accounts?.[0]) {
+        const updatedAcc = data.accounts[0];
+        // Atualiza o estado local imediatamente para refletir na UI
+        setAccounts(prev => prev.map(acc => 
+          acc.id === account.id ? { ...acc, balance: updatedAcc.balance, currency: updatedAcc.currency } : acc
+        ));
+        setSuccess(`Saldo da conta ${account.name} atualizado: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: updatedAcc.currency }).format(updatedAcc.balance)}`);
       } else {
         throw new Error(data.error);
       }

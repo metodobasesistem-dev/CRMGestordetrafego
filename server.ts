@@ -995,12 +995,18 @@ async function startServer() {
 
           // Update in Supabase
           if (supabaseAdmin) {
-            await supabaseAdmin.from('meta_ads_accounts').update(formatted).eq('id', id);
+            const { error: updateError } = await supabaseAdmin.from('meta_ads_accounts').update(formatted).eq('id', id);
+            if (updateError) {
+              console.error(`[MetaAds] Erro ao salvar saldo no DB para conta ${id}:`, updateError.message);
+              // Mesmo com erro no DB, vamos retornar os dados para o frontend mostrar
+            }
           }
 
           results.push(formatted);
         } catch (err: any) {
-          console.error(`[MetaAds] Erro ao sincronizar conta ${id}:`, err.message);
+          const metaError = err.response?.data?.error?.message || err.message;
+          console.error(`[MetaAds] Erro na API da Meta para conta ${id}:`, metaError);
+          return res.status(400).json({ error: `Erro na Meta: ${metaError}` });
         }
       }
 
