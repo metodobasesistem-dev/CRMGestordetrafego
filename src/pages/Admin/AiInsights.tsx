@@ -1371,21 +1371,69 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           {/* 1. Métricas Reais (Overview) */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-emerald-600/20 text-emerald-400 rounded-lg">
+              <div className="p-1.5 bg-indigo-600/20 text-indigo-400 rounded-lg">
                 <Activity className="w-4 h-4" />
               </div>
               <h2 className="text-sm font-black text-white uppercase tracking-widest">Métricas de Performance</h2>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
-              <PrintKpi label="Investimento" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.spend)} />
-              <PrintKpi label="Conversas WA" value={totals.results.toLocaleString('pt-BR')} />
-              <PrintKpi label="Custo/Conversa" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.costPerResult)} />
-              <PrintKpi label="CTR Médio" value={`${totals.ctr.toFixed(2)}%`} />
-              <PrintKpi label="Impressões" value={totals.impressions.toLocaleString('pt-BR')} />
-              <PrintKpi label="Alcance" value={totals.reach.toLocaleString('pt-BR')} />
-              <PrintKpi label="CPM Médio" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.cpm)} />
-              <PrintKpi label="Frequência" value={totals.frequency.toFixed(2)} />
+            <div className="grid grid-cols-4 gap-4">
+              <PrintKpi 
+                icon={<DollarSign className="w-3 h-3" />}
+                label="Investimento" 
+                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.spend)} 
+                subLabel="Total no período"
+                color="indigo"
+              />
+              <PrintKpi 
+                icon={<MessageSquare className="w-3 h-3" />}
+                label="Conversas WA" 
+                value={totals.results.toLocaleString('pt-BR')} 
+                subLabel="Leads / Conversas"
+                color="green"
+              />
+              <PrintKpi 
+                icon={<Target className="w-3 h-3" />}
+                label="Custo/Conversa" 
+                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.costPerResult)} 
+                subLabel="Média por lead"
+                color="red"
+              />
+              <PrintKpi 
+                icon={<TrendingUp className="w-3 h-3" />}
+                label="CTR Médio" 
+                value={`${totals.ctr.toFixed(2)}%`} 
+                subLabel="Taxa de clique"
+                color="emerald"
+              />
+              <PrintKpi 
+                icon={<Eye className="w-3 h-3" />}
+                label="Impressões" 
+                value={totals.impressions.toLocaleString('pt-BR')} 
+                subLabel="Visualizações totais"
+                color="blue"
+              />
+              <PrintKpi 
+                icon={<Globe className="w-3 h-3" />}
+                label="Alcance" 
+                value={totals.reach.toLocaleString('pt-BR')} 
+                subLabel="Pessoas únicas"
+                color="cyan"
+              />
+              <PrintKpi 
+                icon={<Zap className="w-3 h-3" />}
+                label="CPM Médio" 
+                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.cpm)} 
+                subLabel="Custo por mil"
+                color="purple"
+              />
+              <PrintKpi 
+                icon={<Activity className="w-3 h-3" />}
+                label="Frequência" 
+                value={totals.frequency.toFixed(2)} 
+                subLabel="Repetições por pessoa"
+                color="orange"
+              />
             </div>
           </div>
 
@@ -1398,45 +1446,59 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
               <h2 className="text-sm font-black text-white uppercase tracking-widest">Análise Estratégica</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-800/30 p-5 rounded-2xl border border-slate-700/50">
-                <h3 className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden">
+                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <div className="p-1.5 bg-indigo-500/20 rounded-lg">
+                    <Sparkles className="w-3 h-3" />
+                  </div>
                   1. Resumo Executivo
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">{analysis.resumo_executivo}</p>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{analysis.resumo_executivo}</p>
               </div>
-              <div className="bg-slate-800/30 p-5 rounded-2xl border border-slate-700/50">
-                <h3 className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Award className="w-3 h-3" />
+              <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden">
+                <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                    <Award className="w-3 h-3" />
+                  </div>
                   2. Pontos Fortes
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">{analysis.pontos_fortes}</p>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{analysis.pontos_fortes}</p>
               </div>
             </div>
 
-            <div className="bg-slate-800/30 p-5 rounded-2xl border border-slate-700/50">
-              <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <ShieldAlert className="w-3 h-3" />
+            <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50">
+              <h3 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="p-1.5 bg-red-500/20 rounded-lg">
+                  <ShieldAlert className="w-3 h-3" />
+                </div>
                 3. Gargalos e Problemas
               </h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">{analysis.gargalos_fugas}</p>
+              <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{analysis.gargalos_fugas}</p>
             </div>
 
-            {/* Plano de Ação - Destaque */}
-            <div className="bg-indigo-600 p-6 rounded-3xl shadow-xl shadow-indigo-500/10">
-              <div className="flex items-center gap-3 mb-4">
-                <Zap className="w-5 h-5 text-white" />
-                <h3 className="text-base font-black text-white uppercase tracking-tight">4. Plano de Melhoria Imediata</h3>
+            {/* Plano de Ação - Destaque (Igual ao site) */}
+            <div className="bg-indigo-600 p-8 rounded-[2rem] shadow-2xl shadow-indigo-500/20">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight">4. Plano de Melhoria Imediata</h3>
+                  <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest opacity-70">Ações estratégicas para execução imediata</p>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 {analysis.plano_acao.map((plano, i) => (
-                  <div key={i} className="bg-white/10 p-4 rounded-xl border border-white/10">
-                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest mb-3">{plano.titulo}</h4>
-                    <ul className="space-y-2">
+                  <div key={i} className="bg-white/10 p-5 rounded-2xl border border-white/10">
+                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
+                      {plano.titulo}
+                      <ArrowUpRight className="w-3 h-3 opacity-40" />
+                    </h4>
+                    <ul className="space-y-3">
                       {plano.acoes.map((acao, j) => (
-                        <li key={j} className="flex items-start gap-2 text-[10px] text-indigo-50 font-medium">
-                          <CheckCircle2 className="w-3 h-3 text-white/60 shrink-0 mt-0.5" />
+                        <li key={j} className="flex items-start gap-2.5 text-[10px] text-indigo-50 font-medium leading-relaxed">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white/60 shrink-0 mt-0.5" />
                           {acao}
                         </li>
                       ))}
@@ -1449,13 +1511,16 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
 
           <div className="page-break-before-always h-2" />
 
-          {/* 3. Funil e Rankings (Compacto) */}
-          <div className="grid grid-cols-3 gap-4 pt-4">
-            <div className="bg-slate-800/20 p-4 rounded-2xl border border-slate-700/30">
-              <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Funil de Tráfego</h3>
-              <div className="space-y-1.5">
+          {/* 3. Funil e Rankings (Compacto e Premium) */}
+          <div className="grid grid-cols-3 gap-6 pt-4">
+            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Funil de Tráfego</h3>
+              </div>
+              <div className="space-y-2">
                 {analysis.funil_trafego.map((item, i) => (
-                  <div key={i} className="flex justify-between items-center p-2 bg-slate-900/40 rounded-lg text-[10px]">
+                  <div key={i} className="flex justify-between items-center p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
                     <span className="font-bold text-slate-400">{item.etapa}</span>
                     <span className="font-black text-white">{item.valor.toLocaleString('pt-BR')}</span>
                   </div>
@@ -1463,25 +1528,34 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
               </div>
             </div>
 
-            <div className="bg-slate-800/20 p-4 rounded-2xl border border-slate-700/30">
-              <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Ranking Performance</h3>
-              <div className="space-y-1.5">
+            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-3.5 h-3.5 text-slate-400" />
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ranking Performance</h3>
+              </div>
+              <div className="space-y-2">
                 {analysis.ranking_campanhas.slice(0, 3).map((camp, i) => (
-                  <div key={i} className="flex items-center gap-2 p-2 bg-slate-900/40 rounded-lg text-[9px]">
-                    <span className="w-4 h-4 flex items-center justify-center bg-indigo-600/20 text-indigo-400 rounded-md font-black">{i+1}º</span>
+                  <div key={i} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
+                    <span className="w-5 h-5 flex items-center justify-center bg-indigo-600 text-white rounded-lg font-black text-[8px]">{i+1}º</span>
                     <span className="font-bold text-slate-300 truncate flex-1">{camp.nome}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-slate-800/20 p-4 rounded-2xl border border-slate-700/30">
-              <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Melhores Criativos</h3>
-              <div className="space-y-1.5">
+            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-4">
+                <Flame className="w-3.5 h-3.5 text-slate-400" />
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Melhores Criativos</h3>
+              </div>
+              <div className="space-y-2">
                 {analysis.melhores_anuncios.slice(0, 3).map((ad, i) => (
-                  <div key={i} className="p-2 bg-slate-900/40 rounded-lg text-[9px]">
-                    <p className="font-bold text-slate-300 truncate mb-0.5">{ad.titulo}</p>
-                    <p className="text-[8px] text-emerald-400 font-black uppercase">{ad.performance}</p>
+                  <div key={i} className="p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="font-bold text-slate-300 truncate">{ad.titulo}</p>
+                      <span className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1 rounded font-black">TOP</span>
+                    </div>
+                    <p className="text-[8px] text-emerald-400 font-black uppercase opacity-70">{ad.performance}</p>
                   </div>
                 ))}
               </div>
@@ -1489,9 +1563,12 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           </div>
           
           {/* Footer */}
-          <div className="pt-8 border-t border-slate-800 flex justify-between items-center opacity-40">
-            <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">CRM GESTOR • INTELIGÊNCIA ARTIFICIAL</p>
-            <p className="text-[8px] font-medium text-slate-500">Documento Confidencial</p>
+          <div className="pt-12 border-t border-slate-800 flex justify-between items-center opacity-30">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">CRM GESTOR • INTELIGÊNCIA ARTIFICIAL</p>
+            </div>
+            <p className="text-[8px] font-medium text-slate-500 italic">Documento Estratégico Confidencial</p>
           </div>
         </div>
       )}
@@ -1499,11 +1576,35 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
   );
 }
 
-function PrintKpi({ label, value }: { label: string; value: string }) {
+function PrintKpi({ icon, label, value, subLabel, color }: { 
+  icon: ReactNode; 
+  label: string; 
+  value: string; 
+  subLabel: string;
+  color: 'indigo' | 'green' | 'red' | 'emerald' | 'blue' | 'cyan' | 'purple' | 'orange' | 'yellow';
+}) {
+  const colors = {
+    purple: "before:bg-purple-500",
+    blue: "before:bg-blue-500",
+    cyan: "before:bg-cyan-500",
+    yellow: "before:bg-yellow-500",
+    green: "before:bg-emerald-500",
+    orange: "before:bg-orange-500",
+    indigo: "before:bg-indigo-500",
+    emerald: "before:bg-emerald-500",
+    red: "before:bg-red-500"
+  };
+
   return (
-    <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
-      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm font-black text-white">{value}</p>
+    <div className={cn(
+      "relative bg-slate-800/40 p-4 pt-6 rounded-2xl border border-slate-700/50 overflow-hidden",
+      "before:absolute before:top-0 before:left-0 before:right-0 before:h-1",
+      colors[color as keyof typeof colors]
+    )}>
+      <div className="text-slate-400 mb-2">{icon}</div>
+      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-base font-black text-white mb-0.5">{value}</p>
+      <p className="text-[8px] text-slate-500 font-medium">{subLabel}</p>
     </div>
   );
 }
