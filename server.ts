@@ -413,10 +413,23 @@ async function startServer() {
         }
       });
 
-      const adAccounts = adAccountsResponse.data.data.map((acc: any) => ({
-        ...acc,
-        balance: acc.balance ? parseFloat(acc.balance) / 100 : 0 // Meta returns balance in cents
-      }));
+      const adAccounts = adAccountsResponse.data.data.map((acc: any) => {
+        const rawBalance = parseFloat(acc.balance || 0) / 100;
+        const spendCap = parseFloat(acc.spend_cap || 0) / 100;
+        const amountSpent = parseFloat(acc.amount_spent || 0) / 100;
+
+        let calculatedBalance = 0;
+        if (spendCap > 0) {
+          calculatedBalance = spendCap - amountSpent;
+        } else {
+          calculatedBalance = Math.abs(rawBalance);
+        }
+
+        return {
+          ...acc,
+          balance: calculatedBalance
+        };
+      });
 
       // 5. Return success and close popup
       res.send(`
@@ -982,13 +995,31 @@ async function startServer() {
         try {
           const response = await axios.get(`https://graph.facebook.com/v19.0/${accountId}`, {
             headers: { Authorization: `Bearer ${access_token}` },
-            params: { fields: 'name,balance,currency,amount_spent,account_status' }
+            params: { fields: 'name,balance,currency,amount_spent,spend_cap,account_status,funding_source_details' }
           });
 
           const data = response.data;
+          
+          // Lógica de Saldo para Meta Ads:
+          // 1. Em contas pós-pagas, 'balance' é o que você deve.
+          // 2. Em contas pré-pagas, o saldo costuma ser (spend_cap - amount_spent).
+          let calculatedBalance = 0;
+          
+          const rawBalance = parseFloat(data.balance || 0) / 100;
+          const spendCap = parseFloat(data.spend_cap || 0) / 100;
+          const amountSpent = parseFloat(data.amount_spent || 0) / 100;
+
+          if (spendCap > 0) {
+            // Se existe um limite definido, o saldo disponível é o limite menos o que já foi gasto
+            calculatedBalance = spendCap - amountSpent;
+          } else {
+            // Caso contrário, usamos o balance bruto (negativo se for crédito)
+            calculatedBalance = Math.abs(rawBalance);
+          }
+
           const formatted = {
             id: id,
-            balance: data.balance ? parseFloat(data.balance) / 100 : 0,
+            balance: calculatedBalance,
             currency: data.currency,
             updated_at: new Date().toISOString()
           };
@@ -1519,10 +1550,21 @@ async function startServer() {
               const accountId = acc.id.startsWith('act_') ? acc.id : `act_${acc.id}`;
               const response = await axios.get(`https://graph.facebook.com/v19.0/${accountId}`, {
                 headers: { Authorization: `Bearer ${acc.access_token}` },
-                params: { fields: 'balance' }
+                params: { fields: 'balance,spend_cap,amount_spent' }
               });
               
-              const newBalance = response.data.balance ? parseFloat(response.data.balance) / 100 : 0;
+              const data = response.data;
+              const rawBalance = parseFloat(data.balance || 0) / 100;
+              const spendCap = parseFloat(data.spend_cap || 0) / 100;
+              const amountSpent = parseFloat(data.amount_spent || 0) / 100;
+
+              let newBalance = 0;
+              if (spendCap > 0) {
+                newBalance = spendCap - amountSpent;
+              } else {
+                newBalance = Math.abs(rawBalance);
+              }
+
               const threshold = acc.balance_threshold || 100;
 
               // Atualizar no DB
