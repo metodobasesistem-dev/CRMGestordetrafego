@@ -409,11 +409,14 @@ async function startServer() {
       const adAccountsResponse = await axios.get("https://graph.facebook.com/v19.0/me/adaccounts", {
         params: {
           access_token: accessToken,
-          fields: "name,account_id,currency,timezone_name"
+          fields: "name,account_id,currency,timezone_name,balance,amount_spent"
         }
       });
 
-      const adAccounts = adAccountsResponse.data.data;
+      const adAccounts = adAccountsResponse.data.data.map((acc: any) => ({
+        ...acc,
+        balance: acc.balance ? parseFloat(acc.balance) / 100 : 0 // Meta returns balance in cents
+      }));
 
       // 5. Return success and close popup
       res.send(`
@@ -962,6 +965,51 @@ async function startServer() {
     }
   });
 
+  // Meta Ads Sync Account Details (Balance, etc)
+  app.get("/api/meta/sync-accounts", async (req, res) => {
+    const { access_token, account_ids } = req.query;
+
+    if (!access_token || !account_ids) {
+      return res.status(400).json({ error: "Parâmetros 'access_token' e 'account_ids' são obrigatórios." });
+    }
+
+    try {
+      const ids = (account_ids as string).split(',');
+      const results = [];
+
+      for (const id of ids) {
+        const accountId = id.startsWith('act_') ? id : `act_${id}`;
+        try {
+          const response = await axios.get(`https://graph.facebook.com/v19.0/${accountId}`, {
+            headers: { Authorization: `Bearer ${access_token}` },
+            params: { fields: 'name,balance,currency,amount_spent,account_status' }
+          });
+
+          const data = response.data;
+          const formatted = {
+            id: id,
+            balance: data.balance ? parseFloat(data.balance) / 100 : 0,
+            currency: data.currency,
+            updated_at: new Date().toISOString()
+          };
+
+          // Update in Supabase
+          if (supabaseAdmin) {
+            await supabaseAdmin.from('meta_ads_accounts').update(formatted).eq('id', id);
+          }
+
+          results.push(formatted);
+        } catch (err: any) {
+          console.error(`[MetaAds] Erro ao sincronizar conta ${id}:`, err.message);
+        }
+      }
+
+      res.json({ success: true, accounts: results });
+    } catch (error: any) {
+      res.status(500).json({ error: "Erro ao sincronizar contas", details: error.message });
+    }
+  });
+
   // Meta Ads OAuth (Legacy/Internal - Keeping for compatibility if needed)
 
   // Google Ads OAuth
@@ -1448,6 +1496,51 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    
+    // Verificação periódica de saldo Meta (a cada 4 horas)
+    setInterval(async () => {
+      console.log("[MetaAds] Iniciando verificação periódica de saldos...");
+      try {
+        const { data: accounts } = await supabaseAdmin
+          .from('meta_ads_accounts')
+          .select('id, name, access_token, balance, balance_threshold')
+          .eq('status', 'connected');
+
+        if (accounts) {
+          for (const acc of accounts) {
+            // Sincronizar via API
+            try {
+              const accountId = acc.id.startsWith('act_') ? acc.id : `act_${acc.id}`;
+              const response = await axios.get(`https://graph.facebook.com/v19.0/${accountId}`, {
+                headers: { Authorization: `Bearer ${acc.access_token}` },
+                params: { fields: 'balance' }
+              });
+              
+              const newBalance = response.data.balance ? parseFloat(response.data.balance) / 100 : 0;
+              const threshold = acc.balance_threshold || 100;
+
+              // Atualizar no DB
+              await supabaseAdmin.from('meta_ads_accounts').update({ balance: newBalance }).eq('id', acc.id);
+
+              if (newBalance <= threshold) {
+                console.warn(`[ALERTA] Conta ${acc.name} (${acc.id}) com saldo baixo: R$ ${newBalance.toFixed(2)}`);
+                // Aqui poderia disparar um WhatsApp ou Email
+                auditLog({
+                  action: 'META_LOW_BALANCE_ALERT',
+                  entityType: 'ad_account',
+                  entityId: acc.id,
+                  details: { balance: newBalance, threshold }
+                } as any);
+              }
+            } catch (err: any) {
+              console.error(`[MetaAds] Erro ao verificar saldo de ${acc.name}:`, err.message);
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error("[MetaAds] Erro na verificação periódica:", error.message);
+      }
+    }, 1000 * 60 * 60 * 4); // 4 horas
   });
 }
 

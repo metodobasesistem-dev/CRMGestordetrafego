@@ -75,6 +75,8 @@ export default function MetaAdsSettings() {
               access_token: accessToken,
               status: "connected",
               expires_at: expiresAt,
+              balance: acc.balance || 0,
+              currency: acc.currency || "BRL",
               updated_at: new Date().toISOString()
             });
         });
@@ -113,6 +115,38 @@ export default function MetaAdsSettings() {
       setError(`Erro ao remover conta: ${err.message}`);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSyncBalance = async (account: MetaAdsAccount) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/meta/sync-accounts?access_token=${account.access_token}&account_ids=${account.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setSuccess(`Saldo da conta ${account.name} atualizado.`);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error("Erro ao sincronizar saldo:", err);
+      setError(`Erro ao sincronizar saldo: ${err.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const updateThreshold = async (accountId: string, threshold: number) => {
+    try {
+      const { error } = await supabase
+        .from('meta_ads_accounts')
+        .update({ balance_threshold: threshold })
+        .eq('id', accountId);
+      
+      if (error) throw error;
+      setSuccess("Limite de alerta atualizado.");
+    } catch (err: any) {
+      setError(`Erro ao atualizar limite: ${err.message}`);
     }
   };
 
@@ -182,18 +216,71 @@ export default function MetaAdsSettings() {
                   <p className="text-xs text-slate-500 dark:text-slate-500 font-mono">{account.id}</p>
                 </div>
 
+                <div className="space-y-4 mb-6">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Saldo Disponível</span>
+                      <button 
+                        onClick={() => handleSyncBalance(account)}
+                        disabled={actionLoading}
+                        className="text-[10px] text-indigo-600 hover:underline font-bold"
+                      >
+                        Sincronizar
+                      </button>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-slate-900 dark:text-white">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: account.currency || 'BRL' }).format(account.balance || 0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                        Alerta de Saldo Baixo ({account.currency || 'BRL'})
+                      </label>
+                    </div>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                        $
+                      </div>
+                      <input 
+                        type="number"
+                        min="0"
+                        placeholder="Ex: 100"
+                        value={account.balance_threshold ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                          updateThreshold(account.id, val);
+                          // Atualização otimista do estado local
+                          setAccounts(prev => prev.map(acc => 
+                            acc.id === account.id ? { ...acc, balance_threshold: val } : acc
+                          ));
+                        }}
+                        className="w-full pl-7 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      />
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                      Você será notificado quando o saldo desta conta for inferior a este valor.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
                     {isExpired ? (
                       <AlertCircle className="w-4 h-4 text-amber-500" />
+                    ) : (account.balance || 0) <= (account.balance_threshold || 100) ? (
+                      <AlertCircle className="w-4 h-4 text-rose-500" />
                     ) : (
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     )}
                     <span className={cn(
                       "text-xs font-bold uppercase tracking-wider",
-                      isExpired ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
+                      isExpired ? "text-amber-600 dark:text-amber-400" : (account.balance || 0) <= (account.balance_threshold || 100) ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
                     )}>
-                      {isExpired ? "Expirado" : "Conectado"}
+                      {isExpired ? "Expirado" : (account.balance || 0) <= (account.balance_threshold || 100) ? "Saldo Baixo" : "Conectado"}
                     </span>
                   </div>
                   <p className="text-[10px] text-slate-400 dark:text-slate-500">

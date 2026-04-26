@@ -33,6 +33,9 @@ export interface MetaAdsAccount {
   status: 'connected' | 'expired';
   expires_at: string;
   updated_at: string;
+  balance?: number;
+  currency?: string;
+  balance_threshold?: number;
 }
 
 export interface GoogleAdsAccount {
