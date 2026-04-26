@@ -147,7 +147,10 @@
     margin: 0 !important;
   }
   
-  h1, h2, h3 {
+  /* Generic print rules for the rest of the app */
+  body:not(.ai-insights-report) h1, 
+  body:not(.ai-insights-report) h2, 
+  body:not(.ai-insights-report) h3 {
     color: black !important;
   }
   
@@ -163,6 +166,17 @@
     color: white !important;
     padding: 2rem !important;
     min-height: 100vh;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .ai-insights-report h1,
+  .ai-insights-report h2,
+  .ai-insights-report h3,
+  .ai-insights-report h4,
+  .ai-insights-report p,
+  .ai-insights-report span {
+    color: white !important;
   }
   
   .ai-insights-report .bg-white {
@@ -176,6 +190,11 @@
   
   .ai-insights-report .text-slate-600 {
     color: #94a3b8 !important; /* slate-400 */
+  }
+
+  .ai-insights-report .text-slate-400,
+  .ai-insights-report .text-slate-500 {
+    color: #64748b !important; /* slate-500 */
   }
 
   .ai-insights-report .bg-slate-50 {

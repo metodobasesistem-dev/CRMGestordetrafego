@@ -1511,51 +1511,97 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
 
           <div className="page-break-before-always h-2" />
 
-          {/* 3. Funil e Rankings (Compacto e Premium) */}
+          {/* 3. Funil e Rankings (Compacto e Premium - Mirroring Web UI) */}
           <div className="grid grid-cols-3 gap-6 pt-4">
-            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Filter className="w-3.5 h-3.5 text-slate-400" />
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Funil de Tráfego</h3>
+            {/* Funil Visual */}
+            <div className="bg-slate-800/30 p-6 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-1.5 bg-pink-500/20 rounded-lg">
+                  <Filter className="w-4 h-4 text-pink-400" />
+                </div>
+                <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Funil de Tráfego</h3>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {analysis.funil_trafego.map((item, i) => (
-                  <div key={i} className="flex justify-between items-center p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
-                    <span className="font-bold text-slate-400">{item.etapa}</span>
-                    <span className="font-black text-white">{item.valor.toLocaleString('pt-BR')}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Target className="w-3.5 h-3.5 text-slate-400" />
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ranking Performance</h3>
-              </div>
-              <div className="space-y-2">
-                {analysis.ranking_campanhas.slice(0, 3).map((camp, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
-                    <span className="w-5 h-5 flex items-center justify-center bg-indigo-600 text-white rounded-lg font-black text-[8px]">{i+1}º</span>
-                    <span className="font-bold text-slate-300 truncate flex-1">{camp.nome}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-800/30 p-5 rounded-3xl border border-slate-700/30">
-              <div className="flex items-center gap-2 mb-4">
-                <Flame className="w-3.5 h-3.5 text-slate-400" />
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Melhores Criativos</h3>
-              </div>
-              <div className="space-y-2">
-                {analysis.melhores_anuncios.slice(0, 3).map((ad, i) => (
-                  <div key={i} className="p-3 bg-slate-900/60 rounded-xl text-[10px] border border-slate-800/50">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="font-bold text-slate-300 truncate">{ad.titulo}</p>
-                      <span className="text-[7px] bg-emerald-500/20 text-emerald-400 px-1 rounded font-black">TOP</span>
+                  <div key={i} className="relative group">
+                    <div 
+                      className="h-14 flex items-center justify-between px-4 rounded-xl border-l-4"
+                      style={{ 
+                        backgroundColor: `${item.cor}20`,
+                        borderColor: item.cor,
+                        width: `${100 - (i * 8)}%`,
+                        marginLeft: `${i * 4}%`
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-60" style={{ color: item.cor }}>{item.etapa}</span>
+                        <span className="text-sm font-black text-white">{item.valor.toLocaleString('pt-BR')}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] font-black opacity-60" style={{ color: item.cor }}>{item.porcentagem}%</span>
+                      </div>
                     </div>
-                    <p className="text-[8px] text-emerald-400 font-black uppercase opacity-70">{ad.performance}</p>
+                    {i < analysis.funil_trafego.length - 1 && (
+                      <div className="flex justify-center py-0.5">
+                        <ChevronDown className="w-3 h-3 text-slate-600" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Ranking Real */}
+            <div className="bg-slate-800/30 p-6 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                  <Target className="w-4 h-4 text-amber-400" />
+                </div>
+                <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Ranking Performance</h3>
+              </div>
+              <div className="space-y-3">
+                {analysis.ranking_campanhas.slice(0, 3).map((camp, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 bg-slate-900/60 rounded-2xl border border-slate-800/50">
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs",
+                      i === 0 ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-slate-800 text-slate-400"
+                    )}>
+                      {i+1}º
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-white text-xs truncate mb-0.5">{camp.nome}</p>
+                      <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">{camp.metrica_principal}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Melhores Criativos Real */}
+            <div className="bg-slate-800/30 p-6 rounded-3xl border border-slate-700/30">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="p-1.5 bg-orange-500/20 rounded-lg">
+                  <Flame className="w-4 h-4 text-orange-400" />
+                </div>
+                <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Melhores Criativos</h3>
+              </div>
+              <div className="space-y-3">
+                {analysis.melhores_anuncios.slice(0, 2).map((ad, i) => (
+                  <div key={i} className="p-4 bg-slate-900/60 rounded-2xl border border-slate-800/50">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="font-bold text-white text-xs truncate">{ad.titulo}</p>
+                      <span className="text-[7px] bg-emerald-500 text-white px-1.5 py-0.5 rounded font-black tracking-widest">TOP</span>
+                    </div>
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[7px] text-slate-500 font-black uppercase tracking-widest">CTR</p>
+                        <p className="text-[10px] font-bold text-emerald-400">{ad.ctr}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Status</p>
+                        <p className="text-[10px] font-bold text-white">{ad.performance}</p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
