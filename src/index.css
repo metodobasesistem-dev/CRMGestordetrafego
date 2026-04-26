@@ -156,4 +156,48 @@
     width: 100% !important;
     height: 400px !important;
   }
+
+  /* AI Insights Specific Print Rules */
+  .ai-insights-report {
+    background-color: #0f172a !important; /* slate-900 */
+    color: white !important;
+    padding: 2rem !important;
+    min-height: 100vh;
+  }
+  
+  .ai-insights-report .bg-white {
+    background-color: #1e293b !important; /* slate-800 */
+    border-color: #334155 !important; /* slate-700 */
+  }
+  
+  .ai-insights-report .text-slate-900 {
+    color: white !important;
+  }
+  
+  .ai-insights-report .text-slate-600 {
+    color: #94a3b8 !important; /* slate-400 */
+  }
+
+  .ai-insights-report .bg-slate-50 {
+    background-color: #1e293b !important;
+  }
+
+  .ai-insights-report .border-slate-200 {
+    border-color: #334155 !important;
+  }
+
+  .ai-insights-report .recharts-cartesian-grid-horizontal line,
+  .ai-insights-report .recharts-cartesian-grid-vertical line {
+    stroke: #334155 !important;
+  }
+
+  .ai-insights-report .recharts-text {
+    fill: #94a3b8 !important;
+  }
+
+  /* Force background colors in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

@@ -32,7 +32,10 @@ import {
   LayoutDashboard,
   Award,
   Flame,
-  Filter
+  Filter,
+  Download,
+  ArrowUpRight,
+  ArrowDownRight
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
@@ -525,8 +528,12 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-20">
+    <div className="space-y-8 max-w-6xl mx-auto pb-20 no-print">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -555,11 +562,21 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
               setShowConfig(!showConfig);
               setShowPromptConfig(false);
             }}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 rounded-xl transition-all"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 rounded-xl transition-all no-print"
           >
             <Settings className="w-4 h-4" />
             Configurar API
           </button>
+
+          {analysis && (
+            <button 
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white font-black rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 no-print"
+            >
+              <Download className="w-5 h-5" />
+              Gerar PDF Completo
+            </button>
+          )}
         </div>
       </div>
 
@@ -1326,6 +1343,193 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           </div>
         </div>
       )}
+    </div>
+
+      {/* FULL PRINT REPORT (Only visible in print) */}
+      {analysis && (
+        <div className="hidden print:block ai-insights-report space-y-12">
+          {/* Print Header */}
+          <div className="flex items-center justify-between border-b-2 border-slate-700 pb-10">
+            <div className="flex items-center gap-6">
+              <div className="p-4 bg-indigo-600 rounded-2xl">
+                <Brain className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-white uppercase tracking-tight">Relatório de Insights IA</h1>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">
+                  {clientes.find(c => c.id === selectedCliente)?.nome_cliente} • {format(new Date(startDate), "dd/MM/yyyy")} até {format(new Date(endDate), "dd/MM/yyyy")}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Gerado em</p>
+              <p className="text-sm font-bold text-white">{format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+            </div>
+          </div>
+
+          {/* 1. Estratégia & Ação */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-600/20 text-indigo-400 rounded-xl">
+                <Lightbulb className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">1. Estratégia & Ação</h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-slate-800/40 p-8 rounded-3xl border border-slate-700">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Resumo Executivo</h3>
+                <p className="text-lg text-slate-200 leading-relaxed font-medium">{analysis.resumo_executivo}</p>
+              </div>
+              <div className="bg-slate-800/40 p-8 rounded-3xl border border-slate-700">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Pontos Fortes</h3>
+                <p className="text-lg text-slate-200 leading-relaxed font-medium">{analysis.pontos_fortes}</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/40 p-8 rounded-3xl border border-slate-700">
+              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Plano de Ação Estratégico</h3>
+              <div className="grid grid-cols-2 gap-6">
+                {analysis.plano_acao.map((plano, i) => (
+                  <div key={i} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700">
+                    <h4 className="font-black text-indigo-400 uppercase tracking-tight mb-4">{plano.titulo}</h4>
+                    <ul className="space-y-2">
+                      {plano.acoes.map((acao, j) => (
+                        <li key={j} className="flex items-start gap-2 text-sm text-slate-300 font-medium">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          {acao}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="page-break-before-always h-4" />
+
+          {/* 2. Saúde das Campanhas */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600/20 text-red-400 rounded-xl">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">2. Saúde das Campanhas</h2>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              {analysis.health_score.map((score, i) => (
+                <div key={i} className="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{score.label}</p>
+                  <p className="text-xl font-black text-white mb-2">{score.atual}</p>
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className={cn(
+                        "h-full transition-all",
+                        score.status === 'success' ? "bg-emerald-500" : score.status === 'warning' ? "bg-amber-500" : "bg-red-500"
+                      )}
+                      style={{ width: `${score.porcentagem}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2">Meta: {score.meta}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              {analysis.alertas.map((alerta, i) => (
+                <div key={i} className="flex gap-4 p-6 bg-slate-800/40 rounded-3xl border border-slate-700">
+                  <AlertCircle className={cn(
+                    "w-6 h-6 shrink-0",
+                    alerta.tipo === 'red' ? "text-red-500" : alerta.tipo === 'orange' ? "text-orange-500" : "text-emerald-500"
+                  )} />
+                  <div>
+                    <h4 className="font-black text-white uppercase tracking-tight mb-1">{alerta.titulo}</h4>
+                    <p className="text-sm text-slate-400 leading-relaxed">{alerta.descricao}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="page-break-before-always h-4" />
+
+          {/* 3. Métricas Reais */}
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-600/20 text-emerald-400 rounded-xl">
+                <Activity className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">3. Métricas Reais</h2>
+            </div>
+
+            <div className="grid grid-cols-3 gap-6">
+              <PrintKpi label="Investimento" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.spend)} />
+              <PrintKpi label="Impressões" value={totals.impressions.toLocaleString('pt-BR')} />
+              <PrintKpi label="Alcance" value={totals.reach.toLocaleString('pt-BR')} />
+              <PrintKpi label="CTR Médio" value={`${totals.ctr.toFixed(2)}%`} />
+              <PrintKpi label="CPM Médio" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.cpm)} />
+              <PrintKpi label="Frequência" value={totals.frequency.toFixed(2)} />
+              <PrintKpi label="Conversas WA" value={totals.results.toLocaleString('pt-BR')} />
+              <PrintKpi label="Custo por Conversa" value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totals.costPerResult)} />
+            </div>
+          </div>
+
+          {/* 4. Dados Brutos */}
+          <div className="space-y-8 mt-12">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl">
+                <ClipboardList className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight">4. Detalhamento de Campanhas</h2>
+            </div>
+
+            <div className="bg-slate-800/40 rounded-3xl border border-slate-700 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-900/50 border-b border-slate-700">
+                  <tr>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Campanha</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Investimento</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Resultados</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Custo/Res</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">CTR</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700">
+                  {rawInsights.map((camp, i) => (
+                    <tr key={i} className="hover:bg-slate-700/30">
+                      <td className="px-6 py-4 text-xs font-bold text-white">{camp.name}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-white text-right">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(camp.spend)}
+                      </td>
+                      <td className="px-6 py-4 text-xs font-bold text-white text-right">{camp.results + camp.wa_conversations}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-white text-right">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(camp.costPerResult)}
+                      </td>
+                      <td className="px-6 py-4 text-xs font-bold text-indigo-400 text-right">{camp.ctr.toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          {/* Footer */}
+          <div className="pt-20 border-t border-slate-700 text-center">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em]">CRM Gestor - Análise de Performance Avançada</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PrintKpi({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-slate-800/40 p-6 rounded-2xl border border-slate-700">
+      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-xl font-black text-white">{value}</p>
     </div>
   );
 }
