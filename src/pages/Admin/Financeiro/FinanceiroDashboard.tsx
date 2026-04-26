@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../../context/AuthContext";
 import { formatCurrency } from "../../../lib/utils";
-import { TrendingUp, TrendingDown, DollarSign, Clock, AlertTriangle, CheckCircle2, Plus, ArrowRight, Wallet, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Clock, AlertTriangle, CheckCircle2, Plus, ArrowRight, Wallet, BarChart3, Eye, EyeOff } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format, subMonths, parseISO, isValid, isBefore, addDays } from "date-fns";
@@ -13,6 +13,7 @@ import { Skeleton } from "../../../components/ui/Skeleton";
 export default function FinanceiroDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [showValues, setShowValues] = useState(false);
   const [pagamentos, setPagamentos] = useState<any[]>([]);
   const [despesas, setDespesas] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
@@ -67,12 +68,12 @@ export default function FinanceiroDashboard() {
     .slice(0, 8);
 
   const kpis = [
-    { label: "Receita Mensal", value: formatCurrency(receitaMensal), icon: Wallet, c: "indigo" },
-    { label: "Recebido", value: formatCurrency(recebido), icon: CheckCircle2, c: "emerald" },
-    { label: "Pendente", value: formatCurrency(pendente), icon: Clock, c: "amber" },
-    { label: "Em Atraso", value: formatCurrency(atrasadoVal), icon: AlertTriangle, c: "red" },
-    { label: "Despesas", value: formatCurrency(totalDesp), icon: TrendingDown, c: "rose" },
-    { label: "Lucro Líquido", value: formatCurrency(lucro), icon: TrendingUp, c: lucro >= 0 ? "emerald" : "red" },
+    { label: "Receita Mensal", rawValue: receitaMensal, icon: Wallet, c: "indigo" },
+    { label: "Recebido", rawValue: recebido, icon: CheckCircle2, c: "emerald" },
+    { label: "Pendente", rawValue: pendente, icon: Clock, c: "amber" },
+    { label: "Em Atraso", rawValue: atrasadoVal, icon: AlertTriangle, c: "red" },
+    { label: "Despesas", rawValue: totalDesp, icon: TrendingDown, c: "rose" },
+    { label: "Lucro Líquido", rawValue: lucro, icon: TrendingUp, c: lucro >= 0 ? "emerald" : "red" },
   ];
 
   const cls: Record<string, string> = {
@@ -86,12 +87,22 @@ export default function FinanceiroDashboard() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl"><DollarSign className="w-6 h-6 text-emerald-600" /></div>
-            Financeiro
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">{format(new Date(), "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}</p>
+        <div className="flex items-center gap-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl"><DollarSign className="w-6 h-6 text-emerald-600" /></div>
+              Financeiro
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">{format(new Date(), "MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, c => c.toUpperCase())}</p>
+          </div>
+          
+          <button 
+            onClick={() => setShowValues(!showValues)}
+            className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-indigo-600 group"
+            title={showValues ? "Ocultar valores" : "Mostrar valores"}
+          >
+            {showValues ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/admin/financeiro/pagamentos" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-200 dark:shadow-none">
@@ -109,12 +120,14 @@ export default function FinanceiroDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {kpis.map(({ label, value, icon: Icon, c }) => (
+          {kpis.map(({ label, rawValue, icon: Icon, c }) => (
             <div key={label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center sm:items-start gap-4">
               <div className={cn("p-2.5 rounded-xl shrink-0", cls[c])}><Icon className="w-5 h-5" /></div>
               <div className="min-w-0">
                 <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-                <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 truncate">{value}</p>
+                <p className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 truncate">
+                  {showValues ? formatCurrency(rawValue) : "R$ ••••••"}
+                </p>
               </div>
             </div>
           ))}
@@ -127,21 +140,28 @@ export default function FinanceiroDashboard() {
           <BarChart3 className="w-5 h-5 text-slate-400" />
         </div>
         {loading ? <Skeleton className="h-64 rounded-xl" /> : (
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="gradRec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
-                <linearGradient id="gradDesp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15}/><stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/></linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5}/>
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}/>
-              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`}/>
-              <Tooltip formatter={(v: any, n: string) => [formatCurrency(v), n === "recebido" ? "Recebido" : "Despesas"]} contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", background: "#fff" }}/>
-              <Legend formatter={(v) => v === "recebido" ? "Recebido" : "Despesas"}/>
-              <Area type="monotone" dataKey="recebido" stroke="#10b981" strokeWidth={2} fill="url(#gradRec)"/>
-              <Area type="monotone" dataKey="despesas" stroke="#f43f5e" strokeWidth={2} fill="url(#gradDesp)"/>
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className={cn("relative", !showValues && "blur-md select-none pointer-events-none")}>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradRec" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+                  <linearGradient id="gradDesp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15}/><stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/></linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5}/>
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false}/>
+                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`}/>
+                <Tooltip formatter={(v: any, n: string) => [formatCurrency(v), n === "recebido" ? "Recebido" : "Despesas"]} contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", background: "#fff" }}/>
+                <Legend formatter={(v) => v === "recebido" ? "Recebido" : "Despesas"}/>
+                <Area type="monotone" dataKey="recebido" stroke="#10b981" strokeWidth={2} fill="url(#gradRec)"/>
+                <Area type="monotone" dataKey="despesas" stroke="#f43f5e" strokeWidth={2} fill="url(#gradDesp)"/>
+              </AreaChart>
+            </ResponsiveContainer>
+            {!showValues && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/10 dark:bg-black/10">
+                <p className="text-sm font-bold text-slate-400 bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl">Valores ocultos</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -167,7 +187,9 @@ export default function FinanceiroDashboard() {
                       <p className="text-[11px] text-slate-400">Venc. {venc && isValid(venc) ? format(venc, "dd/MM/yyyy") : "—"}{atrasado && <span className="ml-2 text-red-500 font-bold">• Em atraso</span>}</p>
                     </div>
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white text-sm">{formatCurrency(Number(p.valor))}</span>
+                  <span className="font-bold text-slate-900 dark:text-white text-sm">
+                    {showValues ? formatCurrency(Number(p.valor)) : "R$ ••••"}
+                  </span>
                 </div>
               );
             })}
