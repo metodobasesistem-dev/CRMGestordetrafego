@@ -90,9 +90,9 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden flex-col lg:flex-row">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden flex-col lg:flex-row print:h-auto print:overflow-visible">
       {/* Mobile Header */}
-      <header className="lg:hidden h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 z-40">
+      <header className="lg:hidden h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 z-40 no-print">
         <Link to="/admin" className="text-lg font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
           <LayoutDashboard className="w-5 h-5" />
           CRM Gestor
@@ -106,7 +106,7 @@ export default function AdminLayout() {
       </header>
 
       {/* Desktop Sidebar (Premium Glass) */}
-      <aside className="hidden lg:flex w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 flex-col shrink-0 z-20">
+      <aside className="hidden lg:flex w-72 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 flex-col shrink-0 z-20 no-print">
         <div className="p-8 flex items-center justify-between">
           <Link to="/admin" className="text-2xl font-black tracking-tighter text-indigo-600 dark:text-indigo-400 flex items-center gap-2 font-display">
             <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -252,7 +252,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Mobile Bottom Navigation (Intuitive) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-around px-1 z-50">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-around px-1 z-50 no-print">
         {navItems.slice(0, 5).map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -431,7 +431,7 @@ export default function AdminLayout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-4 lg:p-8 pb-20 lg:pb-8">
+      <main className="flex-1 overflow-auto p-4 lg:p-8 pb-20 lg:pb-8 print:overflow-visible print:p-0">
         <Outlet />
       </main>
     </div>

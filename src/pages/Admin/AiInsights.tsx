@@ -533,7 +533,8 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-20 no-print">
+    <div className="space-y-8 max-w-6xl mx-auto pb-20">
+      <div className="space-y-8 no-print">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -1343,6 +1344,7 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           </div>
         </div>
       )}
+      </div>
 
       {/* FULL PRINT REPORT (Only visible in print) */}
       {analysis && (
