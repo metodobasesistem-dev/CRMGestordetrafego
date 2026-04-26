@@ -98,3 +98,62 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-indigo-500 transition-colors;
 }
+/* Print Styles for PDF Export */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .glass, .glass-card {
+    background: white !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    page-break-inside: avoid;
+  }
+  
+  .dark body, .dark .glass, .dark .glass-card {
+    background: white !important;
+    color: black !important;
+    border-color: #e2e8f0 !important;
+  }
+  
+  .text-indigo-600, .dark .text-indigo-400 {
+    color: #4f46e5 !important;
+  }
+  
+  header, footer, .floating-button, button, select {
+    display: none !important;
+  }
+  
+  main {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  .max-w-7xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  h1, h2, h3 {
+    color: black !important;
+  }
+  
+  /* Ensure charts have enough space */
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 400px !important;
+  }
+}

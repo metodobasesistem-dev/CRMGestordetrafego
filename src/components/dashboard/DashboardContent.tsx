@@ -62,6 +62,7 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
     key: "investimento",
     direction: "desc",
   });
+  const [gestorNote, setGestorNote] = useState("O desempenho geral da conta mantém-se estável, com foco na otimização do custo por conversão e expansão do alcance qualificado.");
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [modalType, setModalType] = useState<"campaign" | "ad" | "adset" | "all_campaigns" | null>(null);
@@ -76,6 +77,10 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
     setFiltroPlataforma(localFiltroPlataforma);
     setDataInicio(localDataInicio);
     setDataFim(localDataFim);
+  };
+
+  const handleExportPDF = () => {
+    window.print();
   };
 
   const debugPanel = useMemo(() => {
@@ -1081,7 +1086,11 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 print:space-y-4">
+      <div className="hidden print:block mb-8">
+        <ReportHeader cliente={cliente} dataInicio={dataInicio} dataFim={dataFim} periodo={periodo} />
+      </div>
+
       <DashboardHeader 
         cliente={cliente} 
         periodo={localPeriodo} 
@@ -1101,6 +1110,7 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
         debugMode={debugMode}
         setDebugMode={setDebugMode}
         onApplyFilters={handleApplyFilters}
+        onExportPDF={handleExportPDF}
         showComparison={showComparison}
         setShowComparison={setShowComparison}
       />
@@ -1423,6 +1433,34 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
           </div>
         </div>
       )}
+
+      {/* Gestor Analysis Section (Editable for UI, Static for PDF) */}
+      <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-indigo-100 dark:border-indigo-900/30 shadow-xl shadow-indigo-500/5 mt-8 page-break-inside-avoid">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-indigo-600 rounded-xl text-white">
+            <Award className="w-5 h-5" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Análise Estratégica do Gestor</h3>
+        </div>
+        
+        <div className="relative group">
+          <textarea 
+            value={gestorNote}
+            onChange={(e) => setGestorNote(e.target.value)}
+            className="w-full min-h-[120px] bg-slate-50 dark:bg-slate-800/30 border-none rounded-2xl p-6 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed focus:ring-2 focus:ring-indigo-500 transition-all resize-none no-print"
+            placeholder="Escreva sua análise técnica do período aqui..."
+          />
+          <div className="hidden print:block p-6 bg-slate-50 border-l-4 border-indigo-600 italic text-slate-700 leading-relaxed text-lg">
+            {gestorNote}
+          </div>
+          <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity no-print">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Zap className="w-3 h-3" />
+              Clique para editar sua análise
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1436,6 +1474,7 @@ function DashboardHeader({
   campaignRanking,
   debugMode, setDebugMode,
   onApplyFilters,
+  onExportPDF,
   showComparison, setShowComparison
 }: any) {
   const [showFilters, setShowFilters] = useState(false);
@@ -1555,10 +1594,19 @@ function DashboardHeader({
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 h-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
             </div>
 
+            {/* Export PDF Button */}
+            <button 
+              onClick={onExportPDF}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md shadow-emerald-200 dark:shadow-none no-print"
+            >
+              <Download className="w-3.5 h-3.5 sm:w-4 h-4" />
+              Exportar PDF
+            </button>
+
             {/* Update Button */}
             <button 
               onClick={onApplyFilters}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md shadow-indigo-200 dark:shadow-none"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md shadow-indigo-200 dark:shadow-none no-print"
             >
               <Activity className="w-3.5 h-3.5 sm:w-4 h-4" />
               Atualizar
@@ -1660,43 +1708,53 @@ function MetricCard({ title, value, type, icon: Icon, color, highlight, variatio
 
   return (
     <div className={cn(
-      "glass-card p-6 group",
-      highlight && "border-indigo-500/30 dark:border-indigo-500/20 shadow-indigo-500/5"
+      "relative overflow-hidden rounded-3xl border bg-white dark:bg-slate-900 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group",
+      highlight ? "border-indigo-100 dark:border-indigo-500/20" : "border-slate-100 dark:border-slate-800"
     )}>
+      {/* Background Glow */}
+      {highlight && (
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full transition-all group-hover:bg-indigo-500/20" />
+      )}
+      
       <div className="flex items-center justify-between mb-4">
-        <div className={cn("p-3 rounded-2xl border transition-all duration-300 group-hover:scale-110 group-hover:rotate-3", colors[color])}>
+        <div className={cn(
+          "p-3 rounded-2xl border transition-all duration-500 group-hover:rotate-6",
+          colors[color] || "bg-slate-100 text-slate-600 border-slate-200"
+        )}>
           <Icon className={cn("w-5 h-5", highlight && "w-6 h-6")} />
         </div>
+        
         {hasVariation && (
           <div className={cn(
-            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border",
+            "flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-tighter transition-all",
             isPositive 
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
-              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" 
+              : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
           )}>
-            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingUp className="w-3 h-3 rotate-180" />}
+            {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
             {Math.abs(parseFloat(variation))}%
           </div>
         )}
       </div>
-      <div className="space-y-1">
-        <p className={cn(
-          "text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors",
-          highlight && "text-indigo-500/80"
-        )}>
+
+      <div className="space-y-1 relative z-10">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
           {title}
         </p>
-        <p className={cn(
-          "text-2xl font-black text-slate-900 dark:text-white font-display", 
-          highlight && "text-3xl bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-500 dark:from-white dark:to-slate-400"
+        <h3 className={cn(
+          "text-2xl font-black font-display tracking-tight text-slate-900 dark:text-white",
+          highlight && "text-3xl"
         )}>
           {formattedValue}
-        </p>
+        </h3>
       </div>
+
       {legend && (
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-4 font-medium leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {legend}
-        </p>
+        <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800/50">
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold leading-tight uppercase tracking-wider">
+            {legend}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -2198,6 +2256,34 @@ function ModalMetric({ label, value, type, icon: Icon, color }: any) {
         <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{label}</span>
       </div>
       <p className="text-lg font-black text-slate-900 dark:text-white">{formattedValue}</p>
+    </div>
+  );
+}
+function ReportHeader({ cliente, dataInicio, dataFim, periodo }: any) {
+  const dateRange = dataInicio && dataFim 
+    ? `${format(parseISO(dataInicio), 'dd/MM/yyyy')} a ${format(parseISO(dataFim), 'dd/MM/yyyy')}`
+    : `Últimos ${periodo === 'max' ? '365+' : periodo} dias`;
+
+  return (
+    <div className="flex items-center justify-between border-b-2 border-slate-900 pb-8">
+      <div className="flex items-center gap-6">
+        {cliente?.logo_url ? (
+          <img src={cliente.logo_url} alt={cliente.nome_cliente} className="h-16 w-auto object-contain" />
+        ) : (
+          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black">
+            {cliente?.nome_cliente?.charAt(0)}
+          </div>
+        )}
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">{cliente?.nome_cliente}</h1>
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">Relatório de Performance de Anúncios</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-bold text-slate-400 uppercase mb-1">Período de Análise</p>
+        <p className="text-lg font-black text-slate-900">{dateRange}</p>
+        <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">Gerado em: {format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+      </div>
     </div>
   );
 }
