@@ -1369,12 +1369,12 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           </div>
 
           {/* 1. Métricas Reais (Overview) */}
-          <div className="space-y-4">
+          <div className="space-y-4 print-section">
             <div className="flex items-center gap-2 mb-2">
               <div className="p-1.5 bg-indigo-600/20 text-indigo-400 rounded-lg">
                 <Activity className="w-4 h-4" />
               </div>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Métricas de Performance</h2>
+              <h2 className="text-sm font-black text-white uppercase tracking-widest" style={{ color: '#ffffff' }}>Métricas de Performance</h2>
             </div>
 
             <div className="grid grid-cols-4 gap-4">
@@ -1443,12 +1443,12 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
               <div className="p-1.5 bg-indigo-600/20 text-indigo-400 rounded-lg">
                 <Lightbulb className="w-4 h-4" />
               </div>
-              <h2 className="text-sm font-black text-white uppercase tracking-widest">Análise Estratégica</h2>
+              <h2 className="text-sm font-black text-white uppercase tracking-widest" style={{ color: '#ffffff' }}>Análise Estratégica</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6 print-section">
               <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden">
-                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: '#818cf8' }}>
                   <div className="p-1.5 bg-indigo-500/20 rounded-lg">
                     <Sparkles className="w-3 h-3" />
                   </div>
@@ -1457,7 +1457,7 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
                 <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{analysis.resumo_executivo}</p>
               </div>
               <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 relative overflow-hidden">
-                <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: '#34d399' }}>
                   <div className="p-1.5 bg-emerald-500/20 rounded-lg">
                     <Award className="w-3 h-3" />
                   </div>
@@ -1467,8 +1467,8 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
               </div>
             </div>
 
-            <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50">
-              <h3 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <div className="bg-slate-800/40 p-6 rounded-3xl border border-slate-700/50 print-section">
+              <h3 className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: '#f87171' }}>
                 <div className="p-1.5 bg-red-500/20 rounded-lg">
                   <ShieldAlert className="w-3 h-3" />
                 </div>
@@ -1478,20 +1478,20 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
             </div>
 
             {/* Plano de Ação - Destaque (Igual ao site) */}
-            <div className="bg-indigo-600 p-8 rounded-[2rem] shadow-2xl shadow-indigo-500/20">
+            <div className="bg-indigo-600 p-8 rounded-[2rem] shadow-2xl shadow-indigo-500/20 print-section">
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white uppercase tracking-tight">4. Plano de Melhoria Imediata</h3>
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight" style={{ color: '#ffffff' }}>4. Plano de Melhoria Imediata</h3>
                   <p className="text-[10px] text-indigo-100 font-bold uppercase tracking-widest opacity-70">Ações estratégicas para execução imediata</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-6">
                 {analysis.plano_acao.map((plano, i) => (
                   <div key={i} className="bg-white/10 p-5 rounded-2xl border border-white/10">
-                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center">
+                    <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-4 flex justify-between items-center" style={{ color: '#ffffff' }}>
                       {plano.titulo}
                       <ArrowUpRight className="w-3 h-3 opacity-40" />
                     </h4>
