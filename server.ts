@@ -419,10 +419,20 @@ async function startServer() {
         const amountSpent = parseFloat(acc.amount_spent || 0) / 100;
 
         let calculatedBalance = 0;
-        if (spendCap > 0) {
-          calculatedBalance = spendCap - amountSpent;
-        } else {
-          calculatedBalance = Math.abs(rawBalance);
+        
+        // Prioridade: Fundos Disponíveis (Pré-pago)
+        const fundingAmount = acc.funding_source_details?.display_amount;
+        if (fundingAmount) {
+          const numericValue = parseFloat(fundingAmount.replace(/[^\d,.-]/g, '').replace(',', '.'));
+          if (!isNaN(numericValue)) calculatedBalance = numericValue;
+        }
+
+        if (calculatedBalance === 0) {
+          if (spendCap > 0) {
+            calculatedBalance = spendCap - amountSpent;
+          } else {
+            calculatedBalance = Math.abs(rawBalance);
+          }
         }
 
         return {
@@ -1001,20 +1011,34 @@ async function startServer() {
           const data = response.data;
           
           // Lógica de Saldo para Meta Ads:
-          // 1. Em contas pós-pagas, 'balance' é o que você deve.
-          // 2. Em contas pré-pagas, o saldo costuma ser (spend_cap - amount_spent).
+          // 1. Priorizamos o 'display_amount' do funding_source_details (Saldo real em caixa para pré-pago)
+          // 2. Se não houver, tentamos (spend_cap - amount_spent)
+          // 3. Por fim, usamos o Math.abs(balance)
+          
           let calculatedBalance = 0;
           
           const rawBalance = parseFloat(data.balance || 0) / 100;
           const spendCap = parseFloat(data.spend_cap || 0) / 100;
           const amountSpent = parseFloat(data.amount_spent || 0) / 100;
 
-          if (spendCap > 0) {
-            // Se existe um limite definido, o saldo disponível é o limite menos o que já foi gasto
-            calculatedBalance = spendCap - amountSpent;
-          } else {
-            // Caso contrário, usamos o balance bruto (negativo se for crédito)
-            calculatedBalance = Math.abs(rawBalance);
+          // Tenta pegar o saldo direto dos detalhes da fonte de pagamento (mais preciso para pré-pago)
+          const fundingAmount = data.funding_source_details?.display_amount;
+          
+          if (fundingAmount) {
+            // O display_amount vem formatado como string, ex: "R$ 283,05"
+            // Vamos extrair apenas os números
+            const numericValue = parseFloat(fundingAmount.replace(/[^\d,.-]/g, '').replace(',', '.'));
+            if (!isNaN(numericValue)) {
+              calculatedBalance = numericValue;
+            }
+          } 
+          
+          if (calculatedBalance === 0) {
+            if (spendCap > 0) {
+              calculatedBalance = spendCap - amountSpent;
+            } else {
+              calculatedBalance = Math.abs(rawBalance);
+            }
           }
 
           const formatted = {
