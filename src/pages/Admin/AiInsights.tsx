@@ -1343,7 +1343,6 @@ Retorne o resultado EXATAMENTE no formato JSON estruturado.`);
           </div>
         </div>
       )}
-    </div>
 
       {/* FULL PRINT REPORT (Only visible in print) */}
       {analysis && (

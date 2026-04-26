@@ -369,8 +369,9 @@ async function startServer() {
       return res.status(400).send("Código de autorização ausente.");
     }
 
+    const redirectUri = process.env.META_REDIRECT_URI || `${process.env.APP_URL}/api/auth/facebook/callback`;
+
     try {
-      const redirectUri = process.env.META_REDIRECT_URI || `${process.env.APP_URL}/api/auth/facebook/callback`;
       
       console.log("--- DEBUG AUTH ---");
       console.log("META_APP_ID:", process.env.META_APP_ID?.substring(0, 5) + "...");

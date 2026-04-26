@@ -66,7 +66,7 @@ export default function MetaAdsSettings() {
         const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : "";
         
         // Save each ad account to the centralized collection
-        const promises = adAccounts.map((acc: { account_id: string; name: string }) => {
+        const promises = adAccounts.map((acc: { account_id: string; name: string; balance?: number; currency?: string }) => {
           return supabase
             .from('meta_ads_accounts')
             .upsert({
