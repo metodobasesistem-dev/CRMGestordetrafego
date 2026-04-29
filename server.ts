@@ -1231,15 +1231,27 @@ async function startServer() {
       }
       
       // Save refresh token
-      if (clienteId && clienteId !== "undefined" && refreshToken) {
-        await supabaseAdmin
-          .from('clientes')
-          .update({
-            google_ads_refresh_token: refreshToken,
-            google_ads_conectado: true,
+      if (clienteId && refreshToken) {
+        if (clienteId === "centralized") {
+          console.log("[GoogleAds] Salvando refresh token centralizado...");
+          // Salva em uma conta fictícia de configuração ou atualiza a primeira encontrada
+          await supabaseAdmin.from('google_ads_accounts').upsert({
+            id: 'config_centralized',
+            name: 'Configuração Global (OAuth)',
+            refresh_token: refreshToken,
+            platform: 'google',
             updated_at: new Date().toISOString()
-          })
-          .eq('id', clienteId);
+          });
+        } else {
+          await supabaseAdmin
+            .from('clientes')
+            .update({
+              google_ads_refresh_token: refreshToken,
+              google_ads_conectado: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', clienteId);
+        }
       }
 
       res.send(`
