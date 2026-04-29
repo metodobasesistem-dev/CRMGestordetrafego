@@ -1161,7 +1161,7 @@ async function startServer() {
       try {
         const devToken = process.env.GOOGLE_DEVELOPER_TOKEN || process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
         if (devToken && accessToken) {
-          const apiVersion = "v18";
+          const apiVersion = "v17";
           const listUrl = `https://googleads.googleapis.com/${apiVersion}/customers:listAccessibleCustomers`;
           
           console.log(`[GoogleAds] Buscando contas acessíveis (${apiVersion})...`);
@@ -1488,7 +1488,7 @@ async function startServer() {
         ORDER BY segments.date DESC
       `;
 
-      const apiVersion = "v18";
+      const apiVersion = "v17";
       const customerIdStr = customer_id as string;
       const searchUrl = `https://googleads.googleapis.com/${apiVersion}/customers/${customerIdStr}/googleAds:search`;
 
