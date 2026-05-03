@@ -104,10 +104,14 @@ export default function UserManagement() {
         if (uError) throw uError;
       } else {
         // Criar novo usuário via API customizada (Auth + Profile)
+        const { data: { session } } = await supabase.auth.getSession();
         const apiUrl = (import.meta as any).env.VITE_API_URL || '';
         const response = await fetch(`${apiUrl}/api/v1/admin/users/create`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`
+          },
           body: JSON.stringify(formData)
         });
 

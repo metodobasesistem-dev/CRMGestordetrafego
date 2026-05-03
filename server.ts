@@ -537,8 +537,42 @@ async function startServer() {
     res.sendStatus(200);
   });
 
+  // --- JWT AUTH & ADMIN MIDDLEWARES ---
+  const requireAdmin = async (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized: Missing token" });
+    }
+    const token = authHeader.split(" ")[1];
+    
+    try {
+      // 1. Validate JWT
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !user) {
+        return res.status(401).json({ error: "Unauthorized: Invalid token" });
+      }
+
+      // 2. Check role in database
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileError || !profile || profile.role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden: Admin access required" });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error("Erro na verificação de admin:", error);
+      res.status(500).json({ error: "Erro interno na autorização" });
+    }
+  };
+
   // Create User Manually (Admin Only)
-  app.post("/api/v1/admin/users/create", async (req, res) => {
+  app.post("/api/v1/admin/users/create", requireAdmin, async (req: any, res: any) => {
     const { email, password, name, role, allowedClients } = req.body;
     
     try {
