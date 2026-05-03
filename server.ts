@@ -570,7 +570,8 @@ async function startServer() {
       res.json({ message: "Usuário criado com sucesso", user: authUser.user });
     } catch (error: any) {
       console.error("[AdminAPI] Erro ao criar usuário:", error);
-      res.status(500).json({ error: error.message });
+      const message = error.message || error.error_description || "Erro desconhecido";
+      res.status(500).json({ error: message });
     }
   });
 
