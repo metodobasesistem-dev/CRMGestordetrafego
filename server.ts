@@ -571,11 +571,14 @@ async function startServer() {
       });
 
       if (authError) {
-        console.error("[AdminAPI] Erro Auth Supabase:", authError);
+        console.error("[AdminAPI] ERRO DETALHADO SUPABASE AUTH:", JSON.stringify(authError, null, 2));
         throw authError;
       }
 
-      // 2. Create or Update Profile (Upsert prevents conflicts with triggers)
+      console.log("[AdminAPI] Usuário criado no Auth com sucesso:", authUser.user.id);
+
+      // 2. Create or Update Profile (DESATIVADO TEMPORARIAMENTE PARA TESTE)
+      /*
       const { error: profileError } = await adminClient
         .from('profiles')
         .upsert({
@@ -591,6 +594,7 @@ async function startServer() {
         console.error("[AdminAPI] Erro Profile Supabase:", profileError);
         throw profileError;
       }
+      */
 
       res.json({ message: "Usuário criado com sucesso", user: authUser.user });
     } catch (error: any) {
