@@ -542,18 +542,41 @@ async function startServer() {
     const { email, password, name, role, allowedClients } = req.body;
     
     try {
+      console.log(`[AdminAPI] Tentando criar usuário: ${email}`);
+      
+      // Criar instância local para garantir que as variáveis de ambiente estão corretas
+      const localSupabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+      const localServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!localSupabaseUrl || !localServiceKey) {
+        throw new Error("Configuração do Supabase ausente no servidor (URL ou Service Key)");
+      }
+
+      console.log(`[AdminAPI] Usando URL: ${localSupabaseUrl.substring(0, 20)}...`);
+      console.log(`[AdminAPI] Key Length: ${localServiceKey.length} characters`);
+      console.log(`[AdminAPI] Key Prefix: ${localServiceKey.substring(0, 10)}...`);
+
+      const adminClient = (await import('@supabase/supabase-js')).createClient(
+        localSupabaseUrl,
+        localServiceKey,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+
       // 1. Create Auth User
-      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { name }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error("[AdminAPI] Erro Auth Supabase:", authError);
+        throw authError;
+      }
 
       // 2. Create Profile
-      const { error: profileError } = await supabaseAdmin
+      const { error: profileError } = await adminClient
         .from('profiles')
         .insert([{
           id: authUser.user.id,
@@ -565,11 +588,14 @@ async function startServer() {
           updated_at: new Date().toISOString()
         }]);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("[AdminAPI] Erro Profile Supabase:", profileError);
+        throw profileError;
+      }
 
       res.json({ message: "Usuário criado com sucesso", user: authUser.user });
     } catch (error: any) {
-      console.error("[AdminAPI] Erro ao criar usuário:", error);
+      console.error("[AdminAPI] Erro Crítico:", error);
       const message = error.message || error.error_description || "Erro desconhecido";
       res.status(500).json({ error: message });
     }
