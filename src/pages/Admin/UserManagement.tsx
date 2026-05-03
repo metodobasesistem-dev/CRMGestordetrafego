@@ -18,6 +18,7 @@ export default function UserManagement() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'client' as 'admin' | 'client',
     allowedClients: [] as string[]
   });
@@ -76,6 +77,7 @@ export default function UserManagement() {
       setFormData({
         name: '',
         email: '',
+        password: '',
         role: 'client',
         allowedClients: []
       });
@@ -101,8 +103,17 @@ export default function UserManagement() {
 
         if (uError) throw uError;
       } else {
-        setError("Para novos usuários, crie primeiro no Supabase Auth. O perfil será sincronizado automaticamente.");
-        return;
+        // Criar novo usuário via API customizada (Auth + Profile)
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/admin/users/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || "Erro ao criar usuário");
+        }
       }
       setIsModalOpen(false);
       fetchData();
@@ -190,9 +201,23 @@ export default function UserManagement() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">E-mail</label>
+                    <input type="email" required disabled={!!editingUser} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl disabled:opacity-50" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                  </div>
+                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nome</label>
                     <input type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                   </div>
+                </div>
+
+                {!editingUser && (
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha Inicial</label>
+                    <input type="password" required className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nível</label>
                     <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}>

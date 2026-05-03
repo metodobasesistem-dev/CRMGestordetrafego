@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Lead, LeadStatus, LeadOrigem } from '../../types';
+import { Lead, LeadStatus, LeadOrigem, Cliente } from '../../types';
 import { Zap, UserPlus, Search, Edit2, Trash2, Filter, MessageSquare, Instagram, ExternalLink, Loader2, X, Check, TrendingUp } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function LeadsManagement() {
+  const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,20 +30,32 @@ export default function LeadsManagement() {
     status: 'novo' as LeadStatus,
     score_qualificacao: 0,
     interesse: '',
-    orcamento: ''
+    orcamento: '',
+    cliente_id: ''
   });
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+    fetchClientes();
+  }, [user]);
+
+  const fetchClientes = async () => {
+    if (user?.role !== 'admin') return;
+    const { data } = await supabase.from('clientes').select('id, nome_cliente');
+    setClientes(data || []);
+  };
 
   const fetchLeads = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const { data, error: lError } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('leads').select('*');
+
+      if (user.role !== 'admin') {
+        query = query.in('cliente_id', user.allowedClients || []);
+      }
+
+      const { data, error: lError } = await query.order('created_at', { ascending: false });
 
       if (lError) throw lError;
       setLeads(data || []);
@@ -66,7 +81,8 @@ export default function LeadsManagement() {
         status: lead.status,
         score_qualificacao: lead.score_qualificacao,
         interesse: lead.interesse || '',
-        orcamento: lead.orcamento || ''
+        orcamento: lead.orcamento || '',
+        cliente_id: lead.cliente_id || ''
       });
     } else {
       setEditingLead(null);
@@ -80,7 +96,8 @@ export default function LeadsManagement() {
         status: 'novo',
         score_qualificacao: 0,
         interesse: '',
-        orcamento: ''
+        orcamento: '',
+        cliente_id: user?.role === 'admin' ? '' : (user?.allowedClients?.[0] || '')
       });
     }
     setIsModalOpen(true);
@@ -355,6 +372,18 @@ export default function LeadsManagement() {
                   <input type="number" min="0" max="100" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium" value={formData.score_qualificacao} onChange={(e) => setFormData({ ...formData, score_qualificacao: parseInt(e.target.value) })} />
                 </div>
               </div>
+
+              {user?.role === 'admin' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vincular ao Cliente</label>
+                  <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all font-medium" value={formData.cliente_id} onChange={(e) => setFormData({ ...formData, cliente_id: e.target.value })}>
+                    <option value="">Selecione um cliente...</option>
+                    {clientes.map(c => (
+                      <option key={c.id} value={c.id}>{c.nome_cliente}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Interesse / Necessidade</label>

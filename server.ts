@@ -537,6 +537,43 @@ async function startServer() {
     res.sendStatus(200);
   });
 
+  // Create User Manually (Admin Only)
+  app.post("/api/v1/admin/users/create", async (req, res) => {
+    const { email, password, name, role, allowedClients } = req.body;
+    
+    try {
+      // 1. Create Auth User
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name }
+      });
+
+      if (authError) throw authError;
+
+      // 2. Create Profile
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert([{
+          id: authUser.user.id,
+          email,
+          name,
+          role,
+          allowed_clients: allowedClients,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+
+      if (profileError) throw profileError;
+
+      res.json({ message: "Usuário criado com sucesso", user: authUser.user });
+    } catch (error: any) {
+      console.error("[AdminAPI] Erro ao criar usuário:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/v1/leo/leads/:id/qualificar", async (req, res) => {
     const { id } = req.params;
     const { messages } = req.body;

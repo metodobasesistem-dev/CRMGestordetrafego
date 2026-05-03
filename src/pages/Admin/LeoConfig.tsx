@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { Zap, Instagram, MessageSquare, Target, Settings, Save, Power, RefreshCw, Send, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Zap, Instagram, MessageSquare, Target, Settings, Save, Power, RefreshCw, Send, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import { Cliente } from "../../types";
 
 export default function LeoConfig() {
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  
   const [config, setConfig] = useState({
     minScore: 70,
     autoResponse: "Oi! Obrigado por se interessar 😊 Vou te enviar mais detalhes no seu direct. Qual é seu melhor horário para conversar?",
@@ -14,6 +22,84 @@ export default function LeoConfig() {
       "Qual é seu orçamento aproximado?"
     ]
   });
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        fetchClientes();
+      } else {
+        const client_id = user.allowedClients?.[0];
+        if (client_id) {
+          setSelectedClientId(client_id);
+          fetchSettings(client_id);
+        }
+      }
+    }
+  }, [user]);
+
+  const fetchClientes = async () => {
+    const { data } = await supabase.from('clientes').select('id, nome_cliente');
+    setClientes(data || []);
+  };
+
+  const fetchSettings = async (clientId: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('leo_settings')
+        .select('*')
+        .eq('cliente_id', clientId)
+        .single();
+
+      if (data) {
+        setConfig({
+          minScore: data.min_score_to_sofia,
+          autoResponse: data.auto_response_message,
+          qualificationQuestions: data.qualification_questions
+        });
+        setIsConnected(!!data.instagram_access_token);
+      } else {
+        // Default config if none exists
+        setConfig({
+          minScore: 70,
+          autoResponse: "Oi! Obrigado por se interessar 😊 Vou te enviar mais detalhes no seu direct. Qual é seu melhor horário para conversar?",
+          qualificationQuestions: ["Qual é seu principal interesse?", "Você já conhece nossos serviços?", "Qual é seu orçamento aproximado?"]
+        });
+        setIsConnected(false);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar settings do Leo:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedClientId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('leo_settings')
+        .upsert({
+          cliente_id: selectedClientId,
+          min_score_to_sofia: config.minScore,
+          auto_response_message: config.autoResponse,
+          qualification_questions: config.qualificationQuestions,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'cliente_id' });
+
+      if (error) throw error;
+      alert("Configurações salvas com sucesso!");
+    } catch (error: any) {
+      alert("Erro ao salvar: " + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading && !clientes.length && user?.role === 'admin') {
+    return <div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>;
+  }
 
   const handleConnect = () => {
     setLoading(true);
@@ -36,7 +122,32 @@ export default function LeoConfig() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {user?.role === 'admin' && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm mb-8">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Gerenciar Configurações do Cliente:</label>
+          <select 
+            className="w-full md:w-1/3 px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 font-bold focus:ring-4 focus:ring-amber-500/10 outline-none transition-all"
+            value={selectedClientId}
+            onChange={(e) => {
+              setSelectedClientId(e.target.value);
+              if (e.target.value) fetchSettings(e.target.value);
+            }}
+          >
+            <option value="">Selecione um cliente...</option>
+            {clientes.map(c => (
+              <option key={c.id} value={c.id}>{c.nome_cliente}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {(!selectedClientId && user?.role === 'admin') ? (
+        <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+          <Target className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
+          <h3 className="text-xl font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">Selecione um cliente para configurar o Leo</h3>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Instagram Connection */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
@@ -161,8 +272,12 @@ export default function LeoConfig() {
                 </div>
 
                 <div className="flex items-end">
-                  <button className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all">
-                    <Save className="w-5 h-5" />
+                  <button 
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                     Salvar Configurações
                   </button>
                 </div>

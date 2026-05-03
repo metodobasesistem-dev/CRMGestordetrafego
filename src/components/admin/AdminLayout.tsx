@@ -122,7 +122,10 @@ export default function AdminLayout() {
           {/* Main Navigation */}
           <div className="space-y-1.5">
             <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Menu Principal</p>
-            {navItems.map((item) => {
+            {navItems.filter(item => {
+              if (user?.role === 'admin') return true;
+              return ['Leo - Leads', 'Dashboard'].includes(item.name);
+            }).map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -146,32 +149,37 @@ export default function AdminLayout() {
           </div>
 
           {/* Financeiro */}
-          <div className="space-y-1.5">
-            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Financeiro</p>
-            {navFinanceiro.map((item) => {
-              const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
-              return (
-                <Link key={item.name} to={item.href}
-                  className={cn("flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
-                    isActive ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
-                  )}
-                >
-                  <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500")} />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </div>
+          {user?.role === 'admin' && (
+            <div className="space-y-1.5">
+              <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Financeiro</p>
+              {navFinanceiro.map((item) => {
+                const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
+                return (
+                  <Link key={item.name} to={item.href}
+                    className={cn("flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
+                      isActive ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/30" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                    )}
+                  >
+                    <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500")} />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
           {/* Integrações */}
           <div className="space-y-1.5">
             <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 opacity-70">Integrações</p>
-            {navIntegracoes.map((item) => {
+            {navIntegracoes.filter(item => {
+              if (user?.role === 'admin') return true;
+              return item.name === 'Leo Config';
+            }).map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link key={item.name} to={item.href}
                   className={cn("flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
-                    isActive ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                    isActive ? (item.color === 'amber' ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30" : "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30") : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                   )}
                 >
                   <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-indigo-500")} />
