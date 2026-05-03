@@ -577,8 +577,7 @@ async function startServer() {
 
       console.log("[AdminAPI] Usuário criado no Auth com sucesso:", authUser.user.id);
 
-      // 2. Create or Update Profile (DESATIVADO TEMPORARIAMENTE PARA TESTE)
-      /*
+      // 2. Create or Update Profile
       const { error: profileError } = await adminClient
         .from('profiles')
         .upsert({
@@ -592,9 +591,8 @@ async function startServer() {
 
       if (profileError) {
         console.error("[AdminAPI] Erro Profile Supabase:", profileError);
-        throw profileError;
+        // Não travamos o processo se for apenas o perfil, pois o usuário no Auth já foi criado
       }
-      */
 
       res.json({ message: "Usuário criado com sucesso", user: authUser.user });
     } catch (error: any) {
