@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-// Tenta usar a Service Role Key, mas se falhar ou não existir, usa a Anon Key (que o usuário confirmou que funciona)
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('⚠️ Supabase admin environment variables are missing!');
+if (!supabaseUrl) console.error('❌ SUPABASE_URL não encontrada!');
+if (!supabaseServiceKey) console.error('❌ SUPABASE_SERVICE_ROLE_KEY não encontrada!');
+
+if (supabaseServiceKey) {
+  console.log(`🔑 Service Key carregada (Inicia com: ${supabaseServiceKey.substring(0, 10)}...)`);
 }
 
 export const supabaseAdmin = createClient(
