@@ -72,6 +72,8 @@ export default function AdminLayout() {
     { name: "Tarefas", href: "/admin/tarefas", icon: CheckSquare },
     { name: "Anotações", href: "/admin/anotacoes", icon: StickyNote },
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
+    { name: "Equipe & Acesso", href: "/admin/usuarios", icon: Shield },
+    { name: "Atividades", href: "/admin/atividades", icon: Activity },
     { name: "Leo - Leads", href: "/admin/leads", icon: Zap, color: "amber" },
     { name: "Redes Sociais", href: "/admin/social", icon: Instagram },
   ];

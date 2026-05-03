@@ -13,6 +13,7 @@ import GeneralSettings from "./pages/Admin/GeneralSettings";
 import MetaAdsSettings from "./pages/Admin/MetaAdsSettings";
 import GoogleAdsSettings from "./pages/Admin/GoogleAdsSettings";
 import ActivityLog from "./pages/Admin/ActivityLog";
+import UserManagement from "./pages/Admin/UserManagement";
 import LeadsManagement from "./pages/Admin/LeadsManagement";
 import LeoConfig from "./pages/Admin/LeoConfig";
 import FinanceiroDashboard from "./pages/Admin/Financeiro/FinanceiroDashboard";
@@ -42,6 +43,7 @@ export default function App() {
                 <Route path="anotacoes" element={<NotesList />} />
                 <Route path="agenda" element={<CalendarView />} />
                 <Route path="leads" element={<LeadsManagement />} />
+                <Route path="usuarios" element={<UserManagement />} />
                 <Route path="leo-config" element={<LeoConfig />} />
                 <Route path="configuracoes" element={<GeneralSettings />} />
                 <Route path="meta-ads" element={<MetaAdsSettings />} />
