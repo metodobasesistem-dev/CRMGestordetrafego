@@ -567,7 +567,12 @@ async function startServer() {
         email,
         password,
         email_confirm: true,
-        user_metadata: { name }
+        user_metadata: { 
+          name: name,
+          full_name: name,
+          nome: name,
+          role: role
+        }
       });
 
       if (authError) {
