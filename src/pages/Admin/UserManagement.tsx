@@ -150,6 +150,13 @@ export default function UserManagement() {
             Gerencie quem pode operar o Leo e o CRM
           </p>
         </div>
+        <button
+          onClick={() => handleOpenModal()}
+          className="flex items-center justify-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
+        >
+          <UserPlus className="w-5 h-5" />
+          Novo Membro
+        </button>
       </div>
 
       <div className="relative group">
