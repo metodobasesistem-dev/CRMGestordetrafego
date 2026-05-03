@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Zap, Instagram, MessageSquare, Target, Settings, Save, Power, RefreshCw, Send, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { supabase } from "../../lib/supabase";
@@ -6,6 +7,8 @@ import { useAuth } from "../../context/AuthContext";
 import { Cliente } from "../../types";
 
 export default function LeoConfig() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,14 +31,22 @@ export default function LeoConfig() {
       if (user.role === 'admin') {
         fetchClientes();
       } else {
-        const client_id = user.allowedClients?.[0];
+        // STRICT SECURITY VALIDATION
+        const client_id = id || user.allowedClients?.[0];
+        
+        if (id && (!user.allowedClients || !user.allowedClients.includes(id))) {
+          console.error("ALERTA DE SEGURANÇA: Acesso não autorizado a este dashboard.");
+          navigate('/dashboard');
+          return;
+        }
+
         if (client_id) {
           setSelectedClientId(client_id);
           fetchSettings(client_id);
         }
       }
     }
-  }, [user]);
+  }, [user, id, navigate]);
 
   const fetchClientes = async () => {
     const { data } = await supabase.from('clientes').select('id, nome_cliente');
@@ -148,64 +159,66 @@ export default function LeoConfig() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Instagram Connection */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2 mb-6">
-              <Instagram className="w-5 h-5 text-pink-500" />
-              Conexão Instagram
-            </h3>
-            
-            {isConnected ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
-                    IG
+        {user?.role === 'admin' && (
+          {/* Instagram Connection */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2 mb-6">
+                <Instagram className="w-5 h-5 text-pink-500" />
+                Conexão Instagram
+              </h3>
+              
+              {isConnected ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                      IG
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">@zyreo_oficial</p>
+                      <p className="text-[10px] text-emerald-600 uppercase font-bold tracking-widest">Conectado</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">@zyreo_oficial</p>
-                    <p className="text-[10px] text-emerald-600 uppercase font-bold tracking-widest">Conectado</p>
-                  </div>
+                  <button 
+                    onClick={() => setIsConnected(false)}
+                    className="w-full py-3 text-rose-600 text-xs font-black uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-900/10 rounded-xl transition-all"
+                  >
+                    Desconectar Conta
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setIsConnected(false)}
-                  className="w-full py-3 text-rose-600 text-xs font-black uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-900/10 rounded-xl transition-all"
-                >
-                  Desconectar Conta
-                </button>
-              </div>
-            ) : (
-              <div className="text-center space-y-4 py-4">
-                <p className="text-sm text-slate-500 font-medium">Conecte sua conta do Instagram para o Leo começar a monitorar comentários e DMs.</p>
-                <button 
-                  onClick={handleConnect}
-                  disabled={loading}
-                  className="w-full py-4 bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-pink-500/20 flex items-center justify-center gap-2"
-                >
-                  {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Instagram className="w-5 h-5" />}
-                  Conectar Instagram
-                </button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="text-center space-y-4 py-4">
+                  <p className="text-sm text-slate-500 font-medium">Conecte sua conta do Instagram para o Leo começar a monitorar comentários e DMs.</p>
+                  <button 
+                    onClick={handleConnect}
+                    disabled={loading}
+                    className="w-full py-4 bg-gradient-to-tr from-purple-600 via-pink-600 to-orange-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-pink-500/20 flex items-center justify-center gap-2"
+                  >
+                    {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Instagram className="w-5 h-5" />}
+                    Conectar Instagram
+                  </button>
+                </div>
+              )}
+            </div>
 
-          <div className="bg-amber-500 rounded-3xl p-6 text-white shadow-xl shadow-amber-500/20">
-            <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5" />
-              Status do Leo
-            </h3>
-            <p className="text-amber-100 text-sm font-medium mb-6">O agente está operando normalmente e monitorando 15 campanhas ativas.</p>
-            <div className="flex items-center justify-between p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-              <span className="text-xs font-bold uppercase tracking-widest">Modo Autônomo</span>
-              <div className="w-12 h-6 bg-emerald-400 rounded-full relative">
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+            <div className="bg-amber-500 rounded-3xl p-6 text-white shadow-xl shadow-amber-500/20">
+              <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2 mb-2">
+                <Zap className="w-5 h-5" />
+                Status do Leo
+              </h3>
+              <p className="text-amber-100 text-sm font-medium mb-6">O agente está operando normalmente e monitorando campanhas ativas.</p>
+              <div className="flex items-center justify-between p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
+                <span className="text-xs font-bold uppercase tracking-widest">Modo Autônomo</span>
+                <div className="w-12 h-6 bg-emerald-400 rounded-full relative">
+                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Messaging & Qualification Config */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={cn("space-y-6", user?.role === 'admin' ? "lg:col-span-2" : "lg:col-span-3")}>
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-3 mb-8">
               <MessageSquare className="w-6 h-6 text-indigo-500" />

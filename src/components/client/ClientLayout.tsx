@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, BarChart3, Sun, Moon, LogOut, Brain, Menu, X } from "lucide-react";
+import { LayoutDashboard, BarChart3, Sun, Moon, LogOut, Brain, Menu, X, Zap, Settings, ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -15,6 +15,21 @@ export default function ClientLayout() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClientListOpen, setIsClientListOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const pathParts = location.pathname.split('/');
+  const currentClientId = pathParts[2];
+  const activeClient = clientes.find(c => c.id === currentClientId) || clientes[0];
+
+  // STRICT FRONTEND VALIDATION
+  useEffect(() => {
+    if (currentClientId && user?.allowedClients && user.allowedClients.length > 0) {
+      if (!user.allowedClients.includes(currentClientId)) {
+        console.error('ALERTA DE SEGURANÇA: Tentativa de acesso a dashboard não autorizado.');
+        navigate('/dashboard');
+      }
+    }
+  }, [currentClientId, user, navigate]);
 
   useEffect(() => {
     console.log('[ClientLayout] User state:', user);
@@ -116,11 +131,13 @@ export default function ClientLayout() {
         </div>
 
         <nav className="flex-1 px-4 space-y-6 overflow-y-auto pb-8">
-          <div className="space-y-1">
-            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Seus Dashboards</p>
+          
+          {/* Seletor de Empresa */}
+          <div className="space-y-1 relative">
+            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Empresa Ativa</p>
             {clientes.length === 0 ? (
               <div className="px-3 py-4 space-y-2">
-                <p className="text-xs text-slate-400 dark:text-slate-500 italic">Nenhum dashboard liberado</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 italic">Nenhuma empresa liberada</p>
                 <button 
                   onClick={() => window.location.reload()}
                   className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline"
@@ -129,27 +146,96 @@ export default function ClientLayout() {
                 </button>
               </div>
             ) : (
-              clientes.map((cliente) => {
-                const href = `/dashboard/${cliente.id}`;
-                const isActive = location.pathname === href;
-                return (
-                  <Link
-                    key={cliente.id}
-                    to={href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors group",
-                      isActive
-                        ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200"
-                    )}
-                  >
-                    <BarChart3 className={cn("w-4 h-4", isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300")} />
-                    <span className="truncate">{cliente.nome_cliente}</span>
-                  </Link>
-                );
-              })
+              <div className="relative">
+                <button
+                  onClick={() => clientes.length > 1 && setIsDropdownOpen(!isDropdownOpen)}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-3 px-3 py-3 text-sm font-bold rounded-xl transition-all border",
+                    clientes.length > 1 ? "hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" : "cursor-default",
+                    "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm"
+                  )}
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center shrink-0">
+                      <span className="text-white font-black text-xs uppercase">{activeClient?.nome_cliente?.substring(0, 2)}</span>
+                    </div>
+                    <span className="truncate text-slate-900 dark:text-slate-100">{activeClient?.nome_cliente || 'Carregando...'}</span>
+                  </div>
+                  {clientes.length > 1 && <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform", isDropdownOpen && "rotate-180")} />}
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && clientes.length > 1 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                    {clientes.map((c) => (
+                      <Link
+                        key={c.id}
+                        to={`/dashboard/${c.id}`}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className={cn(
+                          "flex items-center justify-between px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
+                          c.id === activeClient?.id ? "bg-indigo-50/50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-600 dark:text-slate-400"
+                        )}
+                      >
+                        <span className="truncate">{c.nome_cliente}</span>
+                        {c.id === activeClient?.id && <CheckCircle2 className="w-4 h-4" />}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
+
+          {/* Menu de Funcionalidades */}
+          {activeClient && (
+            <div className="space-y-1">
+              <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 mt-6">Aplicativos</p>
+              
+              <Link
+                to={`/dashboard/${activeClient.id}`}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-all group",
+                  location.pathname === `/dashboard/${activeClient.id}`
+                    ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200"
+                )}
+              >
+                <LayoutDashboard className={cn("w-5 h-5", location.pathname === `/dashboard/${activeClient.id}` ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300")} />
+                Visão Geral
+              </Link>
+
+              <Link
+                to={`/dashboard/${activeClient.id}/leads`}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-all group relative overflow-hidden",
+                  location.pathname === `/dashboard/${activeClient.id}/leads`
+                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200"
+                )}
+              >
+                <Zap className={cn("w-5 h-5", location.pathname === `/dashboard/${activeClient.id}/leads` ? "text-amber-500" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300")} />
+                Leo Leads
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </div>
+              </Link>
+
+              <Link
+                to={`/dashboard/${activeClient.id}/configuracoes`}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-lg transition-all group",
+                  location.pathname === `/dashboard/${activeClient.id}/configuracoes`
+                    ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200"
+                )}
+              >
+                <Settings className={cn("w-5 h-5", location.pathname === `/dashboard/${activeClient.id}/configuracoes` ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300")} />
+                Configurações
+              </Link>
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">

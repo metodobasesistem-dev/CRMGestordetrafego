@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Lead, LeadStatus, LeadOrigem, Cliente } from '../../types';
 import { Zap, UserPlus, Search, Edit2, Trash2, Filter, MessageSquare, Instagram, ExternalLink, Loader2, X, Check, TrendingUp } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -8,6 +9,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function LeadsManagement() {
+  const { id } = useParams();
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -52,7 +54,17 @@ export default function LeadsManagement() {
       let query = supabase.from('leads').select('*');
 
       if (user.role !== 'admin') {
-        query = query.in('cliente_id', user.allowedClients || []);
+        // STRICT SECURITY: Evitar IDOR (Insecure Direct Object Reference)
+        if (id && (!user.allowedClients || !user.allowedClients.includes(id))) {
+          throw new Error("ALERTA DE SEGURANÇA: Acesso não autorizado a este dashboard.");
+        }
+        
+        // Filtra pelo ID da URL (se existir) ou por todos os permitidos
+        if (id) {
+          query = query.eq('cliente_id', id);
+        } else {
+          query = query.in('cliente_id', user.allowedClients || []);
+        }
       }
 
       const { data, error: lError } = await query.order('created_at', { ascending: false });
@@ -97,7 +109,7 @@ export default function LeadsManagement() {
         score_qualificacao: 0,
         interesse: '',
         orcamento: '',
-        cliente_id: user?.role === 'admin' ? '' : (user?.allowedClients?.[0] || '')
+        cliente_id: user?.role === 'admin' ? '' : (id || user?.allowedClients?.[0] || '')
       });
     }
     setIsModalOpen(true);

@@ -64,6 +64,8 @@ export default function App() {
               <Route path="/dashboard" element={<ClientLayout />}>
                 <Route index element={<div className="flex items-center justify-center h-full text-slate-400 font-bold uppercase tracking-widest">Selecione um dashboard no menu lateral</div>} />
                 <Route path=":id" element={<ClientDashboard />} />
+                <Route path=":id/leads" element={<LeadsManagement />} />
+                <Route path=":id/configuracoes" element={<LeoConfig />} />
               </Route>
             </Route>
 
