@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard, Instagram } from "lucide-react";
+import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard, Instagram, Zap } from "lucide-react";
 import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -72,8 +72,7 @@ export default function AdminLayout() {
     { name: "Tarefas", href: "/admin/tarefas", icon: CheckSquare },
     { name: "Anotações", href: "/admin/anotacoes", icon: StickyNote },
     { name: "Agenda", href: "/admin/agenda", icon: Calendar },
-    { name: "Atividades", href: "/admin/atividades", icon: Activity },
-    { name: "Usuários", href: "/admin/usuarios", icon: Shield },
+    { name: "Leo - Leads", href: "/admin/leads", icon: Zap, color: "amber" },
     { name: "Redes Sociais", href: "/admin/social", icon: Instagram },
   ];
 
@@ -84,9 +83,10 @@ export default function AdminLayout() {
   ];
 
   const navIntegracoes = [
+    { name: "Leo Config", href: "/admin/leo-config", icon: Settings, color: "amber" },
     { name: "Meta Ads", href: "/admin/meta-ads", icon: Facebook },
     { name: "Google Ads", href: "/admin/google-ads", icon: Globe },
-    { name: "Config", href: "/admin/configuracoes", icon: Settings },
+    { name: "Geral", href: "/admin/configuracoes", icon: Settings },
   ];
 
   return (
@@ -129,11 +129,11 @@ export default function AdminLayout() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 group relative",
                     isActive
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                      ? (item.color === 'amber' ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30" : "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30")
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                   )}
                 >
-                  <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-slate-400 dark:text-slate-500 group-hover:text-indigo-500")} />
+                  <item.icon className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : cn("text-slate-400 dark:text-slate-500", item.color === 'amber' ? "group-hover:text-amber-500" : "group-hover:text-indigo-500"))} />
                   {item.name}
                   {isActive && (
                     <span className="absolute left-0 w-1 h-6 bg-white rounded-r-full transform -translate-x-4" />

@@ -96,3 +96,35 @@ export interface Note {
   created_at: string;
   updated_at: string;
 }
+
+// --- ZYREO ECOSYSTEM: LEO (DEMAND AGENT) ---
+
+export type LeadStatus = 
+  | 'novo' 
+  | 'em_qualificacao' 
+  | 'qualificado' 
+  | 'passado_sofia' 
+  | 'convertido' 
+  | 'perdido';
+
+export type LeadOrigem = 'instagram_comentario' | 'instagram_dm' | 'meta_ads' | 'direto_whatsapp' | 'outro';
+
+export interface Lead {
+  id: string;
+  nome: string;
+  email?: string;
+  telefone?: string;
+  instagram_username?: string;
+  origem: LeadOrigem;
+  plataforma: 'instagram' | 'whatsapp';
+  status: LeadStatus;
+  score_qualificacao: number; // 0-100
+  interesse?: string;
+  orcamento?: string;
+  interacoes_instagram: number;
+  data_passagem_sofia?: string;
+  feedback_sofia?: string;
+  campanha_id?: string; // Link with MetaAds campaign
+  created_at: string;
+  updated_at: string;
+}

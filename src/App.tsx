@@ -5,15 +5,10 @@ import ClientList from "./pages/Admin/ClientList";
 import ClientForm from "./pages/Admin/ClientForm";
 import InternalDashboard from "./pages/Admin/InternalDashboard";
 import ClientDashboard from "./pages/Dashboard/ClientDashboard";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import UserManagement from "./pages/Admin/UserManagement";
-import TaskList from "./pages/Admin/TaskList";
-import NotesList from "./pages/Admin/NotesList";
-import CalendarView from "./pages/Admin/CalendarView";
-import GeneralSettings from "./pages/Admin/GeneralSettings";
-import MetaAdsSettings from "./pages/Admin/MetaAdsSettings";
 import GoogleAdsSettings from "./pages/Admin/GoogleAdsSettings";
 import ActivityLog from "./pages/Admin/ActivityLog";
+import LeadsManagement from "./pages/Admin/LeadsManagement";
+import LeoConfig from "./pages/Admin/LeoConfig";
 import FinanceiroDashboard from "./pages/Admin/Financeiro/FinanceiroDashboard";
 import Pagamentos from "./pages/Admin/Financeiro/Pagamentos";
 import Despesas from "./pages/Admin/Financeiro/Despesas";
@@ -40,7 +35,8 @@ export default function App() {
                 <Route path="tarefas" element={<TaskList />} />
                 <Route path="anotacoes" element={<NotesList />} />
                 <Route path="agenda" element={<CalendarView />} />
-                <Route path="usuarios" element={<UserManagement />} />
+                <Route path="leads" element={<LeadsManagement />} />
+                <Route path="leo-config" element={<LeoConfig />} />
                 <Route path="configuracoes" element={<GeneralSettings />} />
                 <Route path="meta-ads" element={<MetaAdsSettings />} />
                 <Route path="google-ads" element={<GoogleAdsSettings />} />

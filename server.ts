@@ -285,6 +285,43 @@ class MetaAdsService {
   }
 }
 
+// --- LEO: INSTAGRAM & LEAD QUALIFICATION SERVICE ---
+class LeoService {
+  static async qualifyWithAI(leadData: any, messages: any[]) {
+    try {
+      const history = messages.map(m => `${m.role === 'user' ? 'Lead' : 'Leo'}: ${m.text}`).join('\n');
+      
+      const prompt = `Analise a seguinte conversa entre o agente Leo e um Lead no Instagram:
+      
+      ${history}
+      
+      Com base nisso, extraia as seguintes informações em JSON:
+      1. score: Um número de 0 a 100 indicando o quão pronto o lead está para uma abordagem de vendas no WhatsApp (Sofia).
+      2. interesse: Qual produto ou serviço o lead demonstrou interesse.
+      3. orcamento: Se mencionado, qual a faixa de orçamento.
+      4. proximo_passo: Uma recomendação curta do que o Leo deve dizer a seguir.
+      
+      Responda apenas o JSON.`;
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return JSON.parse(response.text().replace(/```json|```/g, ''));
+    } catch (error) {
+      console.error("[LeoService] Erro na qualificação IA:", error);
+      return { score: 10, interesse: "Desconhecido", proximo_passo: "Continuar conversa padrão." };
+    }
+  }
+
+  static async sendToSofia(lead: Lead) {
+    console.log(`[LeoService] Passando lead ${lead.nome} para Sofia (Webhook)...`);
+    // Aqui seria o disparo de webhook para o sistema Sofia (WppAi)
+    // await axios.post(process.env.SOFIA_WEBHOOK_URL!, { lead });
+    return true;
+  }
+}
+
 async function startServer() {
   const app = express();
   app.use(express.json());
@@ -474,6 +511,57 @@ async function startServer() {
       }
       console.error("Redirect URI usada:", redirectUri);
       res.status(500).send("Erro na autenticação com Meta Ads");
+    }
+  });
+
+  // --- LEO: INSTAGRAM OAUTH & WEBHOOKS ---
+
+  app.get("/api/leo/instagram/auth", (req, res) => {
+    const appId = process.env.META_APP_ID;
+    const redirectUri = `${process.env.APP_URL}/api/leo/instagram/callback`;
+    const scopes = ["instagram_basic", "instagram_manage_comments", "instagram_manage_messages"].join(",");
+    const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}&response_type=code`;
+    res.json({ url });
+  });
+
+  app.post("/api/leo/webhook/instagram", async (req, res) => {
+    // Receptor de Webhooks do Instagram (Comentários e DMs)
+    const { entry } = req.body;
+    console.log("[Leo] Webhook recebido:", JSON.stringify(req.body));
+    
+    // Lógica para processar comentário "Oi" ou DM
+    // 1. Identificar usuário
+    // 2. Criar lead no Supabase se não existir
+    // 3. Disparar resposta automática
+    
+    res.sendStatus(200);
+  });
+
+  app.post("/api/v1/leo/leads/:id/qualificar", async (req, res) => {
+    const { id } = req.params;
+    const { messages } = req.body;
+    
+    try {
+      const qualification = await LeoService.qualifyWithAI({ id }, messages);
+      
+      const { data, error } = await supabaseAdmin
+        .from('leads')
+        .update({
+          score_qualificacao: qualification.score,
+          interesse: qualification.interesse,
+          orcamento: qualification.orcamento,
+          status: qualification.score >= 70 ? 'qualificado' : 'em_qualificacao',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      res.json({ lead: data, suggestion: qualification.proximo_passo });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 
@@ -1155,6 +1243,8 @@ async function startServer() {
       
       const accessToken = tokens.access_token;
       const refreshToken = tokens.refresh_token;
+      console.log("[GoogleAds] Access Token:", accessToken ? "Ok" : "FALTA");
+      console.log("[GoogleAds] Refresh Token:", refreshToken ? "Ok" : "FALTA");
       const adAccounts: any[] = [];
 
       // Fetch accounts using v18
