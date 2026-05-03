@@ -575,18 +575,17 @@ async function startServer() {
         throw authError;
       }
 
-      // 2. Create Profile
+      // 2. Create or Update Profile (Upsert prevents conflicts with triggers)
       const { error: profileError } = await adminClient
         .from('profiles')
-        .insert([{
+        .upsert({
           id: authUser.user.id,
           email,
           name,
           role,
           allowed_clients: allowedClients,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }]);
+        }, { onConflict: 'id' });
 
       if (profileError) {
         console.error("[AdminAPI] Erro Profile Supabase:", profileError);
