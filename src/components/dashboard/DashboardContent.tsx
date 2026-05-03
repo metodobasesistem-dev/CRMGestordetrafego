@@ -8,7 +8,7 @@ import {
   Download, ArrowUpDown, Users, Activity,
   Zap, Award, ArrowUpRight, ArrowDownRight,
   Layers, PieChart as PieChartIcon, X, Bug, ListFilter, CheckCircle2,
-  ArrowUp, ArrowDown
+  ArrowUp, ArrowDown, RefreshCw
 } from "lucide-react";
 import { 
   XAxis, YAxis, CartesianGrid, 
@@ -37,6 +37,9 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
   const [campaignSortConfig, setCampaignSortConfig] = useState<{ key: string; direction: "asc" | "desc" }>({ key: 'investimento', direction: 'desc' });
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   
   // Applied Filters (These trigger data fetching)
@@ -215,7 +218,32 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
     if (!clienteId) return;
 
     const fetchData = async () => {
-      setLoading(true);
+      const cacheKey = `dashboard_v2_${clienteId}_${periodo}_${dataInicio}_${dataFim}`;
+
+      // Tenta carregar do cache primeiro (se não for um refresh manual)
+      const cachedStr = localStorage.getItem(cacheKey);
+      if (cachedStr) {
+        try {
+          const cached = JSON.parse(cachedStr);
+          if (cached && cached.timestamp) {
+            setCliente(cached.cliente);
+            setDados(cached.dados);
+            setCampanhas(cached.campanhas);
+            setAdTotals(cached.adTotals);
+            setAdsetTotals(cached.adsetTotals);
+            setSummary(cached.summary);
+            setLastRefreshed(new Date(cached.timestamp));
+            setLoading(false);
+            setIsRefreshing(false);
+            return; // Encontrou cache, não faz a requisição
+          }
+        } catch (e) {
+          console.log("Erro ao ler cache", e);
+        }
+      }
+
+      // Se não encontrou cache, busca na API
+      if (!isRefreshing && dados.length === 0) setLoading(true);
       setError(null);
       try {
         const { data: clientData, error: clientError } = await supabase
@@ -231,6 +259,11 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
           let allMappedData: DadosCampanha[] = [];
           let metaErrorMsg = "";
           let googleErrorMsg = "";
+          
+          let fetchedCampaigns: any[] = [];
+          let fetchedAdTotals: any[] = [];
+          let fetchedAdsetTotals: any[] = [];
+          let fetchedSummary: any = null;
 
           // --- FETCH META ADS ---
           if (clientData.meta_ads_conectado && clientData.meta_ads_account_id) {
@@ -287,10 +320,22 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
                     const insights = result.data || [];
                     
                     if (result.debug) setDebugInfo(result.debug);
-                    if (result.campaigns) setCampanhas(result.campaigns);
-                    if (result.ad_totals) setAdTotals(result.ad_totals);
-                    if (result.adset_totals) setAdsetTotals(result.adset_totals);
-                    if (!clientData.google_ads_conectado) setSummary(result.summary);
+                    if (result.campaigns) {
+                      fetchedCampaigns = result.campaigns;
+                      setCampanhas(result.campaigns);
+                    }
+                    if (result.ad_totals) {
+                      fetchedAdTotals = result.ad_totals;
+                      setAdTotals(result.ad_totals);
+                    }
+                    if (result.adset_totals) {
+                      fetchedAdsetTotals = result.adset_totals;
+                      setAdsetTotals(result.adset_totals);
+                    }
+                    if (!clientData.google_ads_conectado) {
+                      fetchedSummary = result.summary;
+                      setSummary(result.summary);
+                    }
                     
                     const mappedMeta = insights.map((insight: any, index: number) => ({
                       id: `meta_${insight.ad_id || index}_${insight.date_start || 'today'}`,
@@ -458,6 +503,19 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
             syncToDatabase(allMappedData, clienteId);
           }
 
+          // Salvar no Cache
+          const cachePayload = {
+            cliente: clientData,
+            dados: allMappedData,
+            campanhas: fetchedCampaigns,
+            adTotals: fetchedAdTotals,
+            adsetTotals: fetchedAdsetTotals,
+            summary: fetchedSummary,
+            timestamp: new Date().getTime()
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
+          setLastRefreshed(new Date());
+
           // Consolidar erros
           if (metaErrorMsg && googleErrorMsg) setError(`Meta: ${metaErrorMsg} | Google: ${googleErrorMsg}`);
           else if (metaErrorMsg) setError(`Meta Ads: ${metaErrorMsg}`);
@@ -471,6 +529,7 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
         setError("Erro ao carregar dados do cliente.");
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
@@ -502,7 +561,14 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
     };
 
     fetchData();
-  }, [clienteId, periodo, dataInicio, dataFim, debugMode]);
+  }, [clienteId, periodo, dataInicio, dataFim, debugMode, refreshCount]);
+
+  const handleManualRefresh = () => {
+    const cacheKey = `dashboard_v2_${clienteId}_${periodo}_${dataInicio}_${dataFim}`;
+    localStorage.removeItem(cacheKey);
+    setIsRefreshing(true);
+    setRefreshCount(prev => prev + 1);
+  };
 
   const filteredData = useMemo(() => {
     let result = [...dados];
@@ -1013,6 +1079,9 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
           onApplyFilters={handleApplyFilters}
           showComparison={showComparison}
           setShowComparison={setShowComparison}
+          onRefresh={handleManualRefresh}
+          isRefreshing={isRefreshing}
+          lastRefreshed={lastRefreshed}
         />
         {debugPanel}
         <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900/30 shadow-sm">
@@ -1060,6 +1129,9 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
           onApplyFilters={handleApplyFilters}
           showComparison={showComparison}
           setShowComparison={setShowComparison}
+          onRefresh={handleManualRefresh}
+          isRefreshing={isRefreshing}
+          lastRefreshed={lastRefreshed}
         />
         {debugPanel}
         <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -1113,6 +1185,9 @@ export default function DashboardContent({ clienteId, isInternal = false }: Dash
         onExportPDF={handleExportPDF}
         showComparison={showComparison}
         setShowComparison={setShowComparison}
+        onRefresh={handleManualRefresh}
+        isRefreshing={isRefreshing}
+        lastRefreshed={lastRefreshed}
       />
 
       {debugPanel}
@@ -1475,7 +1550,8 @@ function DashboardHeader({
   debugMode, setDebugMode,
   onApplyFilters,
   onExportPDF,
-  showComparison, setShowComparison
+  showComparison, setShowComparison,
+  onRefresh, isRefreshing, lastRefreshed
 }: any) {
   const [showFilters, setShowFilters] = useState(false);
 
@@ -1597,11 +1673,32 @@ function DashboardHeader({
             {/* Export PDF Button */}
             <button 
               onClick={onExportPDF}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md shadow-emerald-200 dark:shadow-none no-print"
+              className="hidden sm:flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md shadow-emerald-200 dark:shadow-none no-print"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 h-4" />
               Exportar PDF
             </button>
+
+            {/* Refresh Button */}
+            <div className="flex flex-col items-end">
+              <button 
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-4 py-2 text-white rounded-full text-[10px] sm:text-sm font-bold transition-all shadow-md no-print",
+                  isRefreshing ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none"
+                )}
+                title="Buscar dados mais recentes da Meta Ads"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 h-4", isRefreshing && "animate-spin")} />
+                <span className="hidden sm:inline">{isRefreshing ? "Atualizando..." : "Atualizar"}</span>
+              </button>
+              {lastRefreshed && (
+                <span className="text-[8px] text-slate-400 mt-1 hidden sm:block">
+                  Atualizado às {format(lastRefreshed, "HH:mm")}
+                </span>
+              )}
+            </div>
 
             {/* Update Button */}
             <button 
