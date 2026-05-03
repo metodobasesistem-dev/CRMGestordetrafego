@@ -32,7 +32,7 @@ export default function NotesList() {
     // Subscribe to changes
     const notesSubscription = supabase
       .channel('notes-changes')
-      .on('postgres_changes', { event: '*', table: 'notes' }, () => {
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'notes' }, () => {
         fetchNotes();
       })
       .subscribe();

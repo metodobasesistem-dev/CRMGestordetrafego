@@ -32,7 +32,7 @@ export default function MetaAdsSettings() {
     // Subscribe to changes
     const subscription = supabase
       .channel('meta-ads-accounts-changes')
-      .on('postgres_changes', { event: '*', table: 'meta_ads_accounts' }, () => {
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'meta_ads_accounts' }, () => {
         fetchAccounts();
       })
       .subscribe();

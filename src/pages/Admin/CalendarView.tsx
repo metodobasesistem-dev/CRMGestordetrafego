@@ -59,14 +59,14 @@ export default function CalendarView() {
     // Subscribe to changes
     const tasksSubscription = supabase
       .channel('tasks-changes-calendar')
-      .on('postgres_changes', { event: '*', table: 'tasks' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'tasks' }, () => {
         fetchTasks();
       })
       .subscribe();
 
     const clientesSubscription = supabase
       .channel('clientes-changes-calendar')
-      .on('postgres_changes', { event: '*', table: 'clientes' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'clientes' }, () => {
         fetchClientes();
       })
       .subscribe();

@@ -38,7 +38,7 @@ export default function GoogleAdsSettings() {
     // Subscribe to changes
     const subscription = supabase
       .channel('google-ads-accounts-changes')
-      .on('postgres_changes', { event: '*', table: 'google_ads_accounts' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'google_ads_accounts' }, () => {
         fetchAccounts();
       })
       .subscribe();

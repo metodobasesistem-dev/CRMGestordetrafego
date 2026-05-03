@@ -103,14 +103,14 @@ export default function TaskList() {
     // Subscribe to changes
     const tasksSubscription = supabase
       .channel('tasks-changes')
-      .on('postgres_changes', { event: '*', table: 'tasks' }, () => {
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'tasks' }, () => {
         fetchTasks();
       })
       .subscribe();
 
     const clientesSubscription = supabase
       .channel('clientes-changes')
-      .on('postgres_changes', { event: '*', table: 'clientes' }, () => {
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'clientes' }, () => {
         fetchClientes();
       })
       .subscribe();

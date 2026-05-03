@@ -27,7 +27,7 @@ export default function ApiKeys() {
     // Subscribe to changes
     const subscription = supabase
       .channel('api-keys-changes')
-      .on('postgres_changes', { event: '*', table: 'api_keys' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'api_keys' }, () => {
         fetchKeys();
       })
       .subscribe();

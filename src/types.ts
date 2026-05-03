@@ -111,6 +111,7 @@ export type LeadOrigem = 'instagram_comentario' | 'instagram_dm' | 'meta_ads' | 
 
 export interface Lead {
   id: string;
+  cliente_id: string;
   nome: string;
   email?: string;
   telefone?: string;

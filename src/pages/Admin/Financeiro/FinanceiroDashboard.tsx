@@ -116,7 +116,7 @@ export default function FinanceiroDashboard() {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 sm:h-28 rounded-2xl" />)}
+          {[1, 2, 3, 4, 5, 6].map(i => <div key={i}><Skeleton className="h-24 sm:h-28 rounded-2xl" /></div>)}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -170,7 +170,7 @@ export default function FinanceiroDashboard() {
           <h2 className="font-bold text-slate-900 dark:text-white">Pendentes e Em Atraso</h2>
           <Link to="/admin/financeiro/pagamentos" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:gap-2 transition-all">Ver todos <ArrowRight className="w-3.5 h-3.5"/></Link>
         </div>
-        {loading ? <div className="p-6 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 rounded-xl"/>)}</div>
+        {loading ? <div className="p-6 space-y-3">{[1,2,3].map(i => <div key={i}><Skeleton className="h-12 rounded-xl"/></div>)}</div>
         : pendentes.length === 0 ? (
           <div className="p-10 text-center"><CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3"/><p className="font-bold text-slate-900 dark:text-white">Tudo em dia!</p></div>
         ) : (

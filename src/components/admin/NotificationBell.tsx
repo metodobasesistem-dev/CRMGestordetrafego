@@ -47,7 +47,7 @@ export default function NotificationBell({ align = 'right' }: NotificationBellPr
     // Subscribe to changes
     const subscription = supabase
       .channel('tasks-changes-bell')
-      .on('postgres_changes', { event: '*', table: 'tasks' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'tasks' }, () => {
         fetchUpcomingTasks();
       })
       .subscribe();

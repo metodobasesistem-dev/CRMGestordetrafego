@@ -25,7 +25,7 @@ export default function IaLogs() {
     // Subscribe to changes
     const subscription = supabase
       .channel('logs-ia-changes')
-      .on('postgres_changes', { event: 'INSERT', table: 'logs_busca_ia' }, () => {
+      .on('postgres_changes' as any, { event: 'INSERT', table: 'logs_busca_ia' }, () => {
         fetchLogs();
       })
       .subscribe();

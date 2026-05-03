@@ -85,7 +85,7 @@ export default function ClientLayout() {
     // Subscribe to changes
     const subscription = supabase
       .channel('clientes-changes-layout')
-      .on('postgres_changes', { event: '*', table: 'clientes' }, () => {
+      .on('postgres_changes' as any, { event: '*', table: 'clientes' }, () => {
         fetchClients();
       })
       .subscribe();
