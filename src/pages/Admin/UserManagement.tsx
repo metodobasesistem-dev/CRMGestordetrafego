@@ -104,7 +104,7 @@ export default function UserManagement() {
         if (uError) throw uError;
       } else {
         // Criar novo usuário via API customizada (Auth + Profile)
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/v1/admin/users/create`, {
+        const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/v1/admin/users/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)

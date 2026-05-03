@@ -303,6 +303,7 @@ export default function LeoConfig() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
