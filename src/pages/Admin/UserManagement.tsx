@@ -188,7 +188,7 @@ export default function UserManagement() {
                 <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight">{user.name || 'Sem Nome'}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
                 <span className={cn("inline-block mt-2 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest", user.role === 'admin' ? "bg-indigo-100 text-indigo-600" : "bg-emerald-100 text-emerald-600")}>
-                  {user.role}
+                  {user.role === 'admin' ? 'Administrador' : 'Cliente'}
                 </span>
               </div>
             </div>
@@ -228,7 +228,7 @@ export default function UserManagement() {
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nível</label>
                     <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}>
-                      <option value="client">Operador</option>
+                      <option value="client">Cliente</option>
                       <option value="admin">Administrador</option>
                     </select>
                   </div>
