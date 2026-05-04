@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { Note, Cliente } from "../../types";
-import { Plus, Trash2, Calendar as CalendarIcon, User, Search, StickyNote, X, Edit2, Loader2, LayoutGrid, List } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, User, Search, StickyNote, X, Edit2, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,7 +30,6 @@ export default function NotesList() {
     fetchNotes();
     fetchClientes();
 
-    // Subscribe to changes
     const notesSubscription = supabase
       .channel('notes-changes')
       .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'notes' }, () => {
@@ -194,15 +193,23 @@ export default function NotesList() {
           {clientes.map(c => (
             <option key={c.id} value={c.id}>{c.nome_cliente}</option>
           ))}
-              <AnimatePresence mode="popLayout">
+        </select>
+      </div>
+
+      <AnimatePresence mode="popLayout">
         {filteredNotes.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center"
+          >
             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <StickyNote className="w-8 h-8 text-slate-400" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Nenhuma anotação encontrada</h3>
             <p className="text-slate-500 dark:text-slate-400">Crie sua primeira anotação para começar.</p>
-          </div>
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
             {filteredNotes.map((note) => (
@@ -238,7 +245,7 @@ export default function NotesList() {
                 </div>
                 
                 <div className="flex-1">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap line-clamp-4 leading-relaxed">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap line-clamp-4 leading-relaxed text-left">
                     {note.content}
                   </p>
                 </div>
