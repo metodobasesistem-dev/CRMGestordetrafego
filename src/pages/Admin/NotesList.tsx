@@ -194,12 +194,9 @@ export default function NotesList() {
           {clientes.map(c => (
             <option key={c.id} value={c.id}>{c.nome_cliente}</option>
           ))}
-        </select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatePresence mode="popLayout">
         {filteredNotes.length === 0 ? (
-          <div className="md:col-span-2 lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <StickyNote className="w-8 h-8 text-slate-400" />
             </div>
@@ -207,71 +204,67 @@ export default function NotesList() {
             <p className="text-slate-500 dark:text-slate-400">Crie sua primeira anotação para começar.</p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            <div className={cn(
-              "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full"
-            )}>
-              {filteredNotes.map((note) => (
-                <motion.div
-                  layout
-                  key={note.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  onClick={() => setViewingNote(note)}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group cursor-pointer flex flex-col h-full min-h-[220px]"
-                >
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-900 dark:text-white leading-tight text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
-                        {note.title}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleOpenModal(note); }}
-                        className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
+            {filteredNotes.map((note) => (
+              <motion.div
+                layout
+                key={note.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={() => setViewingNote(note)}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group cursor-pointer flex flex-col h-full min-h-[220px]"
+              >
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-slate-900 dark:text-white leading-tight text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                      {note.title}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleOpenModal(note); }}
+                      className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap line-clamp-4 leading-relaxed">
+                    {note.content}
+                  </p>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1.5 rounded-lg w-fit uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5" />
+                    <span className="truncate max-w-[150px]">{getClienteName(note.cliente_id)}</span>
                   </div>
                   
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap line-clamp-4 leading-relaxed">
-                      {note.content}
-                    </p>
+                  <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {(() => {
+                      try {
+                        return note.date ? format(new Date(note.date + 'T12:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Sem data";
+                      } catch (e) {
+                        return "Data inválida";
+                      }
+                    })()}
                   </div>
-                  
-                  <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1.5 rounded-lg w-fit uppercase tracking-wider">
-                      <User className="w-3.5 h-3.5" />
-                      <span className="truncate max-w-[150px]">{getClienteName(note.cliente_id)}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
-                      <CalendarIcon className="w-3.5 h-3.5" />
-                      {(() => {
-                        try {
-                          return note.date ? format(new Date(note.date + 'T12:00:00'), "dd 'de' MMMM, yyyy", { locale: ptBR }) : "Sem data";
-                        } catch (e) {
-                          return "Data inválida";
-                        }
-                      })()}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </AnimatePresence>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Modal de Visualização (Pop-up) */}
       {viewingNote && (
