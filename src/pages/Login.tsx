@@ -77,10 +77,19 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Lock className="w-3 h-3" />
-                Senha
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Lock className="w-3 h-3" />
+                  Senha
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-500 transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <input
                 type="password"
                 required

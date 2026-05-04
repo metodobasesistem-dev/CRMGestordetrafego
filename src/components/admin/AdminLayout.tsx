@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard, Instagram, Zap } from "lucide-react";
+import { LayoutDashboard, Users, ChevronRight, BarChart3, Sun, Moon, Shield, Settings, LogOut, Menu, X, Facebook, Globe, CheckSquare, Calendar, StickyNote, Activity, DollarSign, TrendingDown, CreditCard, Instagram, Zap, Lock } from "lucide-react";
 import { cn, isFakeClient } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -242,13 +242,20 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={toggleTheme}
               className="flex items-center justify-center p-3 text-slate-600 dark:text-slate-400 bg-slate-100/50 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-2xl transition-all duration-300"
               title={theme === 'light' ? 'Modo Escuro' : 'Modo Claro'}
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => navigate('/forgot-password')}
+              className="flex items-center justify-center p-3 text-indigo-600 bg-indigo-50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/20 rounded-2xl transition-all duration-300"
+              title="Redefinir Senha"
+            >
+              <Lock className="w-5 h-5" />
             </button>
             <button
               onClick={handleSignOut}

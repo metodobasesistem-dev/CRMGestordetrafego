@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Cliente } from "../../types";
-import { LayoutDashboard, BarChart3, Sun, Moon, LogOut, Brain, Menu, X, Zap, Settings, ChevronDown, CheckCircle2 } from "lucide-react";
+import { LayoutDashboard, BarChart3, Sun, Moon, LogOut, Brain, Menu, X, Zap, Settings, ChevronDown, CheckCircle2, Lock } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -254,6 +254,14 @@ export default function ClientLayout() {
                 Modo Claro
               </>
             )}
+          </button>
+          
+          <button
+            onClick={() => navigate('/forgot-password')}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <Lock className="w-5 h-5" />
+            Redefinir Senha
           </button>
 
           <button
